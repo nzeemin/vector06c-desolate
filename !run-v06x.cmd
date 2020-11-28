@@ -1,0 +1,1 @@
+start x-v06x\v06x --window --nosound --rom desolate.rom

@@ -1,0 +1,1 @@
+start C:\bin\bashkiria2m\EMU.exe desolate.rom

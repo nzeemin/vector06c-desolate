@@ -1,0 +1,13 @@
+/x-*
+/.vscode
+/SpriteRotate/bin
+/SpriteRotate/obj
+/SpriteRotate/.vs
+/desolcod0.lst
+/desolate.txt
+/*.bin
+/*.rom
+/original/skoolkit/desolate
+/original/x-*
+/desolate.sjbin
+/desolate.sjsym
