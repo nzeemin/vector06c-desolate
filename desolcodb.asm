@@ -133,36 +133,43 @@ L9E9D:
   ret
 
 ; Put background tile on the screen, 16x16 -> 16x16 on shadow screen, no mask
-;   L = row; E = tile column 0..11; IX = tile address
-;TODO: Use A instead of L
-;TODO: Use HL instead of IX
+;   A = row 0..128-16; E = tile column 0..11; HL = tile address
 L9EAD:
-  ld a,e
+  push af               ; store row
+  ld a,e                ; get tile column 0..11
   add a,a
   add a,a
   add a,a
   add a,a
   ld (L86D7),a          ; penCol
-  ld a,l                ; penRow
-  ld b,8                ; 8 row pairs
+  pop af                ; restore row
+  ex de,hl              ; now DE = tile address
   call GetScreenAddr    ; now HL = screen addr
-  ld e,ixl
-  ld d,ixh
   ex de,hl              ; now HL = tile address, DE = shadow screen address
+  ld b,8                ; 8 row pairs
 L9EAD_1:
   push bc
+  ld bc,24-1            ; increment to the next line
 ; Draw 1st line
-  ldi                   ; copy 1st byte
-  ldi                   ; copy 2nd byte
+  ld a,(hl)
+  ld (de),a              ; put 1st byte
+  inc hl
+  inc de
+  ld a,(hl)
+  ld (de),a              ; put 2nd byte
+  inc hl
   ex de,hl
-  ld bc,24-2
   add hl,bc             ; to the 2nd line
   ex de,hl
 ; Draw 2nd line
-  ldi                   ; copy 1st byte
-  ldi                   ; copy 2nd byte
+  ld a,(hl)
+  ld (de),a              ; put 1st byte
+  inc hl
+  inc de
+  ld a,(hl)
+  ld (de),a              ; put 2nd byte
+  inc hl
   ex de,hl
-  ld bc,24-2
   add hl,bc             ; to the 2nd line
   ex de,hl
 ; Continue the loop
@@ -175,7 +182,7 @@ L9EAD_1:
 ;   DE = sprite address; H = column; L = row
 ;   A = bits 0..5 - sub-sprite ; bit7=1 - reflect horz (was: bit6=1 - reflect vert)
 L9EDE:
-  PUSH HL
+  PUSH HL                 ; store column/row
   PUSH AF
   AND $3F
   LD H,$00
@@ -188,22 +195,46 @@ L9EDE:
   add hl,hl
   ADD HL,DE               ; now HL = source sprite address
   LD DE,L9FAF             ; DE = buffer address
-  LD BC,64
-L9EDE_copy:
-  ldi
-  ldi
-  ldi
-  ldi
-  ldi
-  ldi
-  ldi
-  ldi
-  jp pe,L9EDE_copy        ;138*8=1104T
+  LD b,8
+L9EDE_copy:               ; Copy sprite into the buffer
+  ld a,(hl)
+  ld (de),a               ; 0
+  inc hl
+  inc de
+  ld a,(hl)
+  ld (de),a               ; 1
+  inc hl
+  inc de
+  ld a,(hl)
+  ld (de),a               ; 2
+  inc hl
+  inc de
+  ld a,(hl)
+  ld (de),a               ; 3
+  inc hl
+  inc de
+  ld a,(hl)
+  ld (de),a               ; 4
+  inc hl
+  inc de
+  ld a,(hl)
+  ld (de),a               ; 5
+  inc hl
+  inc de
+  ld a,(hl)
+  ld (de),a               ; 6
+  inc hl
+  inc de
+  ld a,(hl)
+  ld (de),a               ; 7
+  inc hl
+  inc de
+  dec b
+  jp nz,L9EDE_copy
   POP AF
-  BIT 7,A
-  CALL NZ,L9EDE_HR        ; Reflect sprite horizontally
-  LD IX,L9FAF
-  POP HL
+;TODO  BIT 7,A
+;TODO  CALL NZ,L9EDE_HR        ; Reflect sprite horizontally
+  POP HL                  ; restore column/row
   LD A,H
   LD H,$00
   LD B,H
@@ -217,36 +248,50 @@ L9EDE_copy:
   ADD HL,BC               ; now HL = offset on the shadow screen
   ld bc,ShadowScreen
   ADD HL,BC
+  LD de,L9FAF             ; sprite buffer address
   LD B,$08                ; 8 line pairs
 L9EDE_0:                  ; loop by B
   PUSH BC
+  ld bc,24-1              ; increment to the next line
 ; Process 1st line
-  ld a,(ix+$00)           ; get mask byte
+  ld a,(de)               ; get mask byte
+  inc de
   and (hl)
-  or (ix+$01)             ; use pixels byte
-  ld (hl),a
+  ex de,hl
+  or (hl)                 ; use pixels byte
+  ex de,hl
+  inc de
+  ld (hl),a               ; put 1st byte
   inc hl
-  ld a,(ix+$02)           ; get mask byte
+  ld a,(de)               ; get mask byte
+  inc de
   and (hl)
-  or (ix+$03)             ; use pixels byte
-  ld (hl),a
-  ld bc,24-1
+  ex de,hl
+  or (hl)                 ; use pixels byte
+  ex de,hl
+  inc de
+  ld (hl),a               ; put 2nd byte
   add hl,bc               ; next line
 ; Process 2nd line
-  ld a,(ix+$04)           ; get mask byte
+  ld a,(de)               ; get mask byte
+  inc de
   and (hl)
-  or (ix+$05)             ; use pixels byte
-  ld (hl),a
+  ex de,hl
+  or (hl)                 ; use pixels byte
+  ex de,hl
+  inc de
+  ld (hl),a               ; put 1st byte
   inc hl
-  ld a,(ix+$06)           ; get mask byte
+  ld a,(de)               ; get mask byte
+  inc de
   and (hl)
-  or (ix+$07)             ; use pixels byte
-  ld (hl),a
-  ld bc,24-1
+  ex de,hl
+  or (hl)                 ; use pixels byte
+  ex de,hl
+  inc de
+  ld (hl),a               ; put 2nd byte
   add hl,bc               ; next line
-; Increase sprite address
-  ld bc,$0008
-  add ix,bc
+; Continue the loop
   POP BC
   dec b
   jp nz,L9EDE_0
@@ -428,7 +473,7 @@ LA892:
 ;  POP IX
 ;  LD A,E
   LD a,D
-  CALL L9EAD              ; Put background tile on the screen
+  CALL L9EAD              ; Put background tile HL on the screen; A = row, E = tile column
 LA8B0:
   POP DE
   POP HL
