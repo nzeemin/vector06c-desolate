@@ -1,4 +1,4 @@
-# spectrum-desolate
+# vector06c-desolate
 Porting **Desolate** game from TI-83 Plus calculator to soviet computer Vector-06c (Вектор-06Ц).
 
 Status: work in progress.
@@ -18,11 +18,11 @@ Links:
 
 To run the game on Wabbitemu emulator:
  1. Run Wabbitemu, select ROM file
- 2. File Open DesData.8xp
- 3. MEM, select Archive; PRGM, select DesData; ENTER
- 4. File Open Desolate.8xp
- 5. File Open MIRAGEOS.8xk
- 6. APPS select MirageOS
+ 2. File Open `DesData.8xp`
+ 3. <kbd>MEM</kbd>, select Archive; <kbd>PRGM</kbd>, select DesData; <kbd>ENTER</kbd>
+ 4. File Open `Desolate.8xp`
+ 5. File Open `MIRAGEOS.8xk`
+ 6. <kbd>APPS</kbd> select MirageOS
  7. Select Main > Desolate
 
 

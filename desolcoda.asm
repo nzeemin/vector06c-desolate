@@ -1,13 +1,17 @@
 
+; Import declarations from desolcod0.asm
+  INCLUDE "desolcod0.inc"
 
+; Turn on/off cheat codes
 CHEAT_SHOW_ROOM_NUMBER  EQU 0
 CHEAT_ALL_ACCESS        EQU 0
 CHEAT_ALL_INVENTORY     EQU 0
 CHEAT_HAVE_WEAPON       EQU 0
 CHEAT_HEALTH_999        EQU 0
 
+;----------------------------------------------------------------------------
 
-  ORG $0300
+  ORG $0200
 Start:
   ld sp,$B300
 ;
@@ -88,9 +92,9 @@ start_2:
 ;  ld hl,Tileset3+15*32
 ;  call L9E5F    ; Put tile on the screen by XOR; E = row; A = X coord; B = height; HL = tile address
 
-  call ShowShadowScreen
-  di
-  halt
+;  call ShowShadowScreen
+;  di
+;  halt
 
 ;  call WaitAnyKey
 ;  call ClearShadowScreen
@@ -116,9 +120,10 @@ ROM_BEEPER 		EQU $03B5   ; hl=pitch  de=duration
 
 ; Sound for "Look" or "Shoot" action
 SoundLookShoot:
-  ld hl,$0190
-  ld de,$0004
-  jp ROM_BEEPER
+;  ld hl,$0190
+;  ld de,$0004
+;  jp ROM_BEEPER
+  ret ;STUB
 
 ; Wait for any key
 WaitAnyKey:
@@ -138,50 +143,44 @@ WaitKeyUp:
   jp nz,WaitKeyUp	; Wait for unpress
   ret
 
-; Source: http://www.breakintoprogram.co.uk/computers/zx-spectrum/keyboard
 ; Returns: A=key code, $00 no key; Z=0 for key, Z=1 for no key
 ; Key codes: Down=$01, Left=$02, Right=$03, Up=$04, Look/shoot=$05
 ;            Inventory=$06, Escape=$07, Switch look/shoot=$08, Enter=$09, Menu=$0F
 ReadKeyboard:
-;   LD HL,ReadKeyboard_map  ; Point HL at the keyboard list
-;   LD D,8                ; This is the number of ports (rows) to check
-;   LD C,$FE              ; C is always FEh for reading keyboard ports
-; ReadKeyboard_0:        
-;   LD B,(HL)             ; Get the keyboard port address from table
-;   INC HL                ; Increment to list of keys
-;   IN A,(C)              ; Read the row of keys in
-;   AND $1F               ; We are only interested in the first five bits
-;   LD E,5                ; This is the number of keys in the row
-; ReadKeyboard_1:        
-;   SRL A                 ; Shift A right; bit 0 sets carry bit
-;   JR NC,ReadKeyboard_2  ; If the bit is 0, we've found our key
-;   INC HL                ; Go to next table address
-;   DEC E                 ; Decrement key loop counter
-;   JR NZ,ReadKeyboard_1  ; Loop around until this row finished
-;   DEC D                 ; Decrement row loop counter
-;   JR NZ,ReadKeyboard_0  ; Loop around until we are done
-;   xor a                 ; Clear A (no key found)
-;   RET
-; ReadKeyboard_2:
-;   LD A,(HL)             ; We've found a key at this point; fetch the character code!
-;   or a
-  xor a ;STUB
-  RET
-; Mapping:
-;   QAOP/1234/6789 - arrows, Space/B/M/N/Z/0/5 - look/shoot
-;   S/D - switch look/shoot, W/E - escape, U/I - inventory; G - menu, Enter=Enter
+  ld hl,ReadKeyboard_map  ; Point HL at the keyboard list
+  ld b,4                  ; number of rows to check
+ReadKeyboard_0:        
+  ld e,(hl)               ; get address low
+  inc hl
+  ld d,(hl)               ; get address high
+  inc hl
+  ld a,(de)               ; get bits for keys
+  ld c,8                  ; number of keys in a row
+ReadKeyboard_1:
+  rla                     ; shift A left; bit 0 sets carry bit
+  jp nc,ReadKeyboard_2    ; if the bit is 0, we've found our key
+  inc hl                  ; next table address
+  dec c
+  jp nz,ReadKeyboard_1    ; continue the loop by bits
+  dec b
+  jp nz,ReadKeyboard_0    ; continue the loop by lines
+  xor a                   ; clear A, no key found
+  ret
+ReadKeyboard_2:
+  ld a,(hl)               ; We've found a key, fetch the character code
+  or a
+  ret
+; Mapping: Arrows; Space - look/shoot, Tab - switch look/shoot,
+;          ?? - escape, I/M - inventory; P/R - menu, Enter=Enter
 ReadKeyboard_map:
-  DB $FE, $00,$05,$00,$00,$00   ; Shift,"Z","X","C","V"
-  DB $FD, $01,$08,$08,$00,$0F   ;   "A","S","D","F","G"
-  DB $FB, $04,$07,$07,$00,$00   ;   "Q","W","E","R","T"
-  DB $F7, $02,$03,$01,$04,$05   ;   "1","2","3","4","5"
-  DB $EF, $06,$04,$01,$03,$02   ;   "0","9","8","7","6"
-  DB $DF, $03,$02,$06,$06,$00   ;   "P","O","I","U","Y"
-  DB $BF, $09,$00,$00,$00,$00   ; Enter,"L","K","J","H"
-  DB $7F, $05,$00,$05,$05,$05   ; Space,Sym,"M","N","B"
-
-CpHLDE:
-  ret ;STUB
+  DW KeysLine0
+  DB $01,$03,$04,$02,$07,$09,$07,$08  ; Dn  Rt  Up  Lt  ZB  VK  PS  Tab
+  DW KeysLine5
+  DB $00,$00,$06,$00,$00,$00,$06,$00  ;  O   N   M   L   K   J   I   H
+  DW KeysLine6
+  DB $00,$00,$00,$00,$00,$0F,$00,$0F  ;  W   V   U   T   S   R   Q   P
+  DW KeysLine7
+  DB $05,$00,$00,$00,$00,$00,$00,$00  ; Spc  ^   ]   \   [   Z   Y   X
 
 ; Get shadow screen address using penCol in L86D7
 ;   A = row 0..137
@@ -595,8 +594,8 @@ ClearScreenBlock:
   ld bc,ShadowScreen
   add hl,bc               ; now HL = start address
   ld c,24                 ; line width in columns
-;  xor a
-  ld a,$01   ;DEBUG
+  xor a
+;  ld a,$01   ;DEBUG
 ClearScreenBlock_1        ; loop by rows
   push hl
   ld b,e    ; cols
