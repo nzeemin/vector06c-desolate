@@ -10,6 +10,7 @@ CHEAT_HEALTH_999        EQU 0
   ORG $0300
 Start:
   ld sp,$B300
+;
 ; Draw DESOLATE title sign on top of the screen
   ld hl,LF4B5             ; Decode from - Main menu screen
   ld bc,12*3              ; need only 3 tile lines
@@ -17,8 +18,10 @@ Start:
   call LB177              ; Display screen from tiles with Tileset2
   call CopyTitleSign
   call ClearShadowScreen
+;
+  call ScreenThemeLight
 
-  call LBA07  ; Show titles and go to Menu
+;  call LBA07  ; Show titles and go to Menu
 
 ; Cheat code to get all door access codes
   IF CHEAT_ALL_ACCESS = 1
@@ -56,7 +59,7 @@ start_2:
 ;  call LB0A2  ; Inventory
 ;  call LBBEC  ; Info menu item, show Controls
 ;  call LBADE  ; New game
-;  call LBB7E  ; Game start
+  call LBB7E  ; Game start
 ;  call LB9A2  ; Player is dead
 ;  call LBD85  ; Final
 ;  call LBF6F  ; The End
@@ -431,16 +434,40 @@ DrawNumber_3:
 	call DrawChar
 	ret 
 
+;
+ScreenThemeDark:
+  xor a
+  jp ScreenTheme_0
+;
+ScreenThemeLight:
+  ld a,$FF
+ScreenTheme_0:
+  ld hl,$C3C8             ; Vector screen addresses, top-left
+  ld b,128+16             ; lines count
+ScreenTheme_1:
+  ld c,26
+  push hl
+ScreenTheme_2:
+  ld (hl),a
+  inc h
+  dec c
+  jp nz,ScreenTheme_2
+  pop hl
+  dec l
+  dec b
+  jp nz,ScreenTheme_1
+  ret
+
 ; Copy DEDSOLATE title from Main Menu shadow screen to Vector screen
 CopyTitleSign:
-  ld de,$C4F0                   ; Vector screen addresses
+  ld de,$C4F0                   ; Vector screen addresses, top-left
   ld hl,ShadowScreen+24*8       ; shadow screen address
   ld b,30                       ; lines to copy
   jp ShowShadowScreen_1
 ;
 ; Copy shadow screen 24*128=3072 bytes to Vector screen
 ShowShadowScreen:
-  ld de,$E4C0                   ; Vector screen addresses
+  ld de,$E4C0                   ; Vector screen addresses, top-left
   ld hl,ShadowScreen            ; shadow screen address
   ld b,128                      ; 128 lines
 ShowShadowScreen_1:             ; loop by A
@@ -587,9 +614,10 @@ ClearScreenBlock_2:       ; loop by columns
 
 ; 8-bit random number generator using Refresh Register (R)
 ; See http://www.cpcwiki.eu/index.php/Programming:Random_Number_Generator
+;TODO: Rewrite for i8080 CPU
 GetRandomByte:
   ld hl,(GetRandomByte_seed)
-  ld a,r
+;  ld a,r
   ld d,a
   ld e,a
   add hl,de

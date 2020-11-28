@@ -299,29 +299,35 @@ L9EDE_0:                  ; loop by B
 ; Horizontal reflection
 L9EDE_HR:
   push af
-  ld ix,L9FAF
+  ld hl,L9FAF
   ld b,16
 L9EDE_HR_1:
-; Exchange bytes 0 <-> 2
-  ld a,(ix+$00)
-  ld c,(ix+$02)
-  call ReflectByte
-  ld (ix+$02),a
+; Exchange bytes 0 <-> 2, 1 <-> 3, with byte flip
+  push hl
+  ld c,(hl)               ; get byte 0
+  inc hl
+  ld d,(hl)               ; get byte 1
+  inc hl
+  ld a,(hl)               ; get byte 2
+  inc hl
+  ld e,(hl)               ; get byte 3
+  pop hl
+  call ReflectByte        ; flip byte 2
+  ld (hl),a               ; put flipped byte 2 -> byte 0
+  inc hl
+  ld a,e
+  call ReflectByte        ; flip byte 3
+  ld (hl),a               ; put flipped byte 3 -> byte 1
+  inc hl
   ld a,c
-  call ReflectByte
-  ld (ix+$00),a
-; Exchange bytes 1 <-> 3
-  ld a,(ix+$01)
-  ld c,(ix+$03)
-  call ReflectByte
-  ld (ix+$03),a
-  ld a,c
-  call ReflectByte
-  ld (ix+$01),a
-  inc ix
-  inc ix
-  inc ix
-  inc ix
+  call ReflectByte        ; flip byte 0
+  ld (hl),a               ; put flipped byte 0 -> byte 2
+  inc hl
+  ld  a,d
+  call ReflectByte        ; flip byte 1
+  ld (hl),a               ; put flipped byte 1 -> byte 3
+  inc hl
+; Continue the loop
   dec b
   jp nz,L9EDE_HR_1
   pop af

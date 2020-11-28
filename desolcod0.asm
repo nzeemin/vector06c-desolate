@@ -1,7 +1,7 @@
 
 ColorC000 .equ 11111111b    ; Color for data on C000-DFFF
 ColorE000 .equ 11111110b    ; Color for data on E000-FFFF - game screen
-ColorBoth .equ 11111100b    ; Color for '1' bit in both spaces
+ColorBoth .equ 00000000b    ; Color for '1' bit in both spaces
 ; Palette colors
 Col0000	.equ	00000000b	;0
 Col0001	.equ	ColorE000	;1
@@ -102,7 +102,7 @@ KEYINT:
 		out	1
 		mvi	a, 23
 		out	3		; scrolling
-		mvi	a, 00000010b
+		mvi	a, 00000000b
 		out	2		; screen mode and border
 ;
 		pop	psw
