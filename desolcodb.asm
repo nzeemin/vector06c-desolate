@@ -59,8 +59,6 @@ L9E51:
 ; Put tile on the screen (NOT aligned to 8px column), 16x?? -> 16x?? on shadow screen
 ; Uses XOR operation so it is revertable.
 ;   E = row; A = X coord; B = height; HL = tile address
-;TODO: use HL instead of IX
-;TODO: use E instead of L
 L9E5F:
   push hl                 ; store tile address
   ld h,$00
@@ -180,10 +178,10 @@ L9EAD_1:
 
 ; Draw sprite
 ;   DE = sprite address; H = column; L = row
-;   A = bits 0..5 - sub-sprite ; bit7=1 - reflect horz (was: bit6=1 - reflect vert)
+;   A = bits 0..5 - sub-sprite; bit7=1 - reflect horz (was: bit6=1 - reflect vert)
 L9EDE:
   PUSH HL                 ; store column/row
-  PUSH AF
+  PUSH AF                 ; store A to chech bit 7 later
   AND $3F
   LD H,$00
   LD L,A
@@ -232,8 +230,9 @@ L9EDE_copy:               ; Copy sprite into the buffer
   dec b
   jp nz,L9EDE_copy
   POP AF
-;TODO  BIT 7,A
-;TODO  CALL NZ,L9EDE_HR        ; Reflect sprite horizontally
+;  BIT 7,A
+  or a                    ; test bit 7
+  call m,L9EDE_HR         ; Reflect sprite horizontally
   POP HL                  ; restore column/row
   LD A,H
   LD H,$00
@@ -338,46 +337,25 @@ L9FAF:                    ; Sprite buffer
 ;
 ; Reflect byte bits of A
 ReflectByte:
-  push bc
-  rlca
-  ld b,a
+  push hl
+  ld h,a
+  add hl,hl
   rra       ; 0
-  ld c,a
-  ld a,b
-  rlca
-  ld b,a
+  add hl,hl
   rra       ; 1
-  ld c,a
-  ld a,b
-  rlca
-  ld b,a
+  add hl,hl
   rra       ; 2
-  ld c,a
-  ld a,b
-  rlca
-  ld b,a
+  add hl,hl
   rra       ; 3
-  ld c,a
-  ld a,b
-  rlca
-  ld b,a
+  add hl,hl
   rra       ; 4
-  ld c,a
-  ld a,b
-  rlca
-  ld b,a
+  add hl,hl
   rra       ; 5
-  ld c,a
-  ld a,b
-  rlca
-  ld b,a
+  add hl,hl
   rra       ; 6
-  ld c,a
-  ld a,b
-  rlca
-  ld b,a
+  add hl,hl
   rra       ; 7
-  pop bc
+  pop hl
   ret
 
 ; Copy shadow screen to ZX screen

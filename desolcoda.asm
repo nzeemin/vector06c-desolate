@@ -25,7 +25,7 @@ Start:
 ;
   call ScreenThemeLight
 
-;  call LBA07  ; Show titles and go to Menu
+  call LBA07  ; Show titles and go to Menu
 
 ; Cheat code to get all door access codes
   IF CHEAT_ALL_ACCESS = 1
@@ -63,7 +63,7 @@ start_2:
 ;  call LB0A2  ; Inventory
 ;  call LBBEC  ; Info menu item, show Controls
 ;  call LBADE  ; New game
-  call LBB7E  ; Game start
+;  call LBB7E  ; Game start
 ;  call LB9A2  ; Player is dead
 ;  call LBD85  ; Final
 ;  call LBF6F  ; The End
@@ -316,8 +316,9 @@ DrawChar_2:
   ld (DrawChar_row),a
   ld a,(de)     ; get flag/width byte
   inc de
-;TODO:  bit 7,a       ; lowered symbol?
-;  jp z,DrawChar_3
+  or a          ; test for bit 7
+;  bit 7,a       ; lowered symbol?
+  jp p,DrawChar_3  ; not lowered symbol => skip
   ld hl,DrawChar_row
   inc (hl)      ; start on the next line
 DrawChar_3:
