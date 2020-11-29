@@ -3,7 +3,7 @@ Porting **Desolate** game from TI-83 Plus calculator to soviet computer Vector-0
 
 Status: work in progress.
 
-![](screenshot/port-room1.png)
+![](screenshot/port-room1.png) ![](screenshot/port-inventory.png) ![](screenshot/port-doorlock.png)
 
 
 ## The original game
