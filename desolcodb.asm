@@ -48,12 +48,15 @@ L9E2E:
 ; Quit menu item selected
 L9E51:
   call LBC7D              ; Clear shadow screen and copy on ZX screen
+  call ScreenThemeNite    ; switch to dark theme
   ld hl,$3014
   ld (L86D7),hl
   ld hl,SQuit
   call LBEDE              ; Show the message
   call ShowShadowScreen
   call WaitAnyKey
+  call LBC7D              ; Clear shadow screen and copy on ZX screen
+  call ScreenThemeLite    ; switch to light theme
   jp LBA3D                ; Return to Menu
 
 ; Put tile on the screen (NOT aligned to 8px column), 16x?? -> 16x?? on shadow screen
@@ -3030,6 +3033,7 @@ LBA07:
   CALL LBC34              ; Delay x20
   XOR A
   LD (LDC85),A            ; Skip delay and copy screen in LBEDE
+  call ScreenThemeLite    ; switching to the light theme on Main Menu
   jp LBA3D                ; Return to Menu
 
 MenuFromGame:
@@ -3163,6 +3167,7 @@ LBB17:
   LD HL,LDC9E             ; level 4 access code buffer
   CALL LBC6B              ; Generate random code
   CALL LBC7D              ; Clear shadow screen and copy to ZX screen
+  call ScreenThemeNite    ; switching to dark theme for story mode
   LD A,$44
   LD (LDC59),A            ; set delay factor
   LD (LDC85),A            ; Use delay and copy screen in LBEDE
@@ -3198,6 +3203,8 @@ LBB7E:
   LD (LDC85),A            ; Skip delay and copy screen in LBEDE
 ; Continue menu item selected
 LBB82:
+  call LBC7D              ; Clear shadow screen and copy to ZX screen
+  call ScreenThemeLite    ; switching to light theme opening the game screen
   LD A,$01
   LD (LDB73),A
   LD A,$FF
@@ -3490,7 +3497,8 @@ LBD85:
   LD A,14     ; was: $07
   LD (LDCF4),A            ; Line interval for text
 ; Showing end-of-story screen
-  CALL ClearShadowScreen
+  call LBC7D              ; Clear and show shadow screen
+  call ScreenThemeNite    ; switch to dark theme for story mode
   call ClearPenRowCol
   LD HL,SE11B             ; "The onboard guidance system picks up a ...
   CALL LBEDE              ; Show message char-by-char
@@ -3655,15 +3663,16 @@ LBF54:
 ;
 ; Credits menu item selected
 LBF64:
-  CALL ClearShadowScreen
-  CALL ShowShadowScreen   ; Copy shadow screen to ZX screen
+  call LBC7D              ; Clear and show shadow screen
+  call ScreenThemeNite    ; switching to dark theme for Credits
   CALL LBF54              ; Set variables for Credits
   jp LBF81                ; Credits screen text scrolls up
 ;
 ; The End
 ;
 LBF6F:
-  CALL ClearShadowScreen
+  call LBC7D              ; Clear and show shadow screen
+  call ScreenThemeNite    ; switching to dark theme for End and Credits
   CALL LBF54              ; Set variables for Credits
   LD HL,$2E46
   LD (L86D7),HL           ; Set penRow/penCol
@@ -3681,7 +3690,7 @@ LBF6F_2:
   call ShowShadowScreen   ; Copy shadow screen to ZX screen
 LBF6F_3:
   CALL LA0F1              ; Scan keyboard
-  jp nz,LBA3D             ; any key pressed => Return to main Menu
+  jp nz,Credits_exit      ; any key pressed => Return to main Menu
   CALL LBFD5              ; Scroll shadow screen up one line
 LBF6F_4:
   LD A,(LDD56)
@@ -3711,6 +3720,8 @@ Credits_5:
   CP $49
   jp NZ,LBF6F_3
   call LBA81              ; Delay x40 - added to have a pause after the last line
+Credits_exit:
+  call ScreenThemeLite    ; switching to light theme for Main Menu
   JP LBA3D                ; Return to main Menu
 ;
 ; Scroll shadow screen up 1px

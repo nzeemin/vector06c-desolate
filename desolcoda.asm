@@ -23,7 +23,7 @@ Start:
   call CopyTitleSign
   call ClearShadowScreen
 ;
-  call ScreenThemeLight
+;  call ScreenThemeLite
 
   call LBA07  ; Show titles and go to Menu
 
@@ -115,8 +115,6 @@ DesolateDataBeg:
 
 ;----------------------------------------------------------------------------
 DesolateCodeBeg:
-
-ROM_BEEPER 		EQU $03B5   ; hl=pitch  de=duration
 
 ; Sound for "Look" or "Shoot" action
 SoundLookShoot:
@@ -435,11 +433,11 @@ DrawNumber_3:
 	ret 
 
 ;
-ScreenThemeDark:
+ScreenThemeNite:
   xor a
   jp ScreenTheme_0
 ;
-ScreenThemeLight:
+ScreenThemeLite:
   ld a,$FF
 ScreenTheme_0:
   ld hl,$C3C8             ; Vector screen addresses, top-left
