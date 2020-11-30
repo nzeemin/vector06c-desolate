@@ -1238,7 +1238,7 @@ LAE19:
 ; Check access and show Door Lock
 ;   LDC8B - Access code slot number
 LAE23:
-  LD A,$28
+  LD A,30       ; 40 -> 30 for Vector
   LD (LDC59),A            ; set delay factor
   LD A,(LDC8B)            ; get Access code slot number
   LD D,$00
@@ -1548,7 +1548,7 @@ LAFFE:
 LB00E:
   XOR A
   LD (LDB82),A            ; mark we don't have an alien in the room
-  LD A,$40
+  LD A,45       ; 64 -> 45 for Vector
   LD (LDC59),A            ; set delay factor
   LD A,(LDC8A)            ; get Direction to other room
   CP $01                  ; down?
@@ -1810,7 +1810,7 @@ LB1BB:                    ; Inventory loop starts here
   call ClearInventoryMesage
   call DrawString         ; draw Inventory item description; was: CALL LBEDE;
   CALL LB295              ; draw Inventory selection square
-  ld a,$44
+  ld a,50       ; 68 -> 50 for Vector
   ld (LDC59),a            ; set delay factor
   call LB2D0              ; delay, to make Inventory selection more usable
 ; Inventory item selection loop
@@ -2032,7 +2032,7 @@ LB307:
   JP LB3E8                ; smth other
 ; Data cartridge reader (or data cartridge) selected in the Inventory
 LB33F:
-  LD A,$44
+  LD A,50       ; 68 -> 50 for Vector
   LD (LDC59),A            ; set delay factor
   LD (LDC85),A            ; Use delay and copy screen in LBEDE
   LD HL,LF42F             ; Encoded screen for Data cartridge reader
@@ -2900,7 +2900,7 @@ LB95C:
   XOR A
   LD (LDB7D),A            ; set look/shoot switch value = Look
 LB960:
-  LD A,$96
+  LD A,100      ; 150 -> 100 for Vector
   LD (LDC59),A            ; set delay factor
   CALL LB2D0              ; Delay
   JP L9E2E                ; Show the screen, continue the game main loop
@@ -3014,7 +3014,7 @@ LB9FF:
 ;
 ; Show titles and show Menu
 LBA07:
-  LD A,$44
+  LD A,50       ; 68 -> 50 for Vector
   LD (LDC59),A            ; set delay factor
   LD (LDC85),A            ; Use delay and copy screen in LBEDE
   LD HL,$3A1E
@@ -3168,7 +3168,7 @@ LBB17:
   CALL LBC6B              ; Generate random code
   CALL LBC7D              ; Clear shadow screen and copy to ZX screen
   call ScreenThemeNite    ; switching to dark theme for story mode
-  LD A,$44
+  LD A,50       ; 68 -> 50 for Vector
   LD (LDC59),A            ; set delay factor
   LD (LDC85),A            ; Use delay and copy screen in LBEDE
   LD A,14   ; was: $0E
@@ -3207,7 +3207,7 @@ LBB82:
   call ScreenThemeLite    ; switching to light theme opening the game screen
   LD A,$01
   LD (LDB73),A
-  LD A,$FF
+  LD A,150      ; 255 -> 150 for Vector
   LD (LDC59),A            ; set delay factor
   CALL LB2D0              ; Delay
   JP L9DDD                ; return to the main game loop
@@ -3488,7 +3488,7 @@ LBD70:
   JP LBCC5                ; Show the message/screen, wait for key, continue game main loop
 ; Flying away on the Pod
 LBD85:
-  LD A,$44
+  LD A,50       ; 68 -> 50 for Vector
   LD (LDC59),A            ; set delay factor
   LD (LDC85),A            ; Use delay and copy screen in LBEDE
   XOR A
@@ -3657,7 +3657,7 @@ LBF54:
   LD (LDD57),A            ; clear Credits line number
   LD (LDD56),A            ; clear Credits counter within one line
   LD (LDC85),A            ; Skip delay and copy screen in LBEDE
-  LD A,$96
+  LD A,90       ; 150 -> 75 for Vector
   LD (LDC59),A            ; set delay factor
   RET
 ;
