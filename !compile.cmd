@@ -26,6 +26,8 @@ tools\pasmo --w8080 desolcoda.asm desolcode.bin desolate.txt
 
 findstr /B "Desolate" desolate.txt
 
+rem tools\lzsa.exe -f1 -c desolcode.bin desolcode.lzsa
+
 copy /b desolcod0.bin+desolcode.bin desolate.rom >nul
 
 dir /-c desolate.rom|findstr /R /C:"desolate"

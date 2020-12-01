@@ -1,7 +1,9 @@
 # vector06c-desolate
 Porting **Desolate** game from TI-83 Plus calculator to soviet computer Vector-06c (Вектор-06Ц).
 
-Status: work in progress.
+Thanks a lot to [zx-pk.ru forum](https://zx-pk.ru/forums/55-vektor.html) members for all the help and support!
+
+Porting status: work in progress.
 
 ![](screenshot/port-room1.png) ![](screenshot/port-inventory.png) ![](screenshot/port-doorlock.png)
 
@@ -33,6 +35,9 @@ To run the game on Wabbitemu emulator:
 
  - `tasm.exe` compatible with Windows 10 + `TASM85.TAB`
    http://old-dos.ru/dl.php?id=1926
+
+ - `lzsa.exe`
+   https://github.com/emmanuel-marty/lzsa/releases
 
 
 ## Links

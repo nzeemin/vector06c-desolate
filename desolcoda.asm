@@ -22,8 +22,6 @@ Start:
   call LB177              ; Display screen from tiles with Tileset2
   call CopyTitleSign
   call ClearShadowScreen
-;
-;  call ScreenThemeLite
 
   call LBA07  ; Show titles and go to Menu
 
@@ -146,7 +144,7 @@ WaitKeyUp:
 ;            Inventory=$06, Escape=$07, Switch look/shoot=$08, Enter=$09, Menu=$0F
 ReadKeyboard:
   ld hl,ReadKeyboard_map  ; Point HL at the keyboard list
-  ld b,4                  ; number of rows to check
+  ld b,5                  ; number of rows to check
 ReadKeyboard_0:        
   ld e,(hl)               ; get address low
   inc hl
@@ -169,10 +167,12 @@ ReadKeyboard_2:
   or a
   ret
 ; Mapping: Arrows; Space - look/shoot, Tab - switch look/shoot,
-;          ?? - escape, I/M - inventory; P/R - menu, Enter=Enter
+;          AR2/ZB/PS - escape, I/M - inventory; P/R - menu, Enter=Enter
 ReadKeyboard_map:
   DW KeysLine0
   DB $01,$03,$04,$02,$07,$09,$07,$08  ; Dn  Rt  Up  Lt  ZB  VK  PS  Tab
+  DW KeysLine1
+  DB $00,$00,$00,$00,$00,$07,$00,$00  ; F5  F4  F3  F2  F1  AR2 Str  ^\
   DW KeysLine5
   DB $00,$00,$06,$00,$00,$00,$06,$00  ;  O   N   M   L   K   J   I   H
   DW KeysLine6
@@ -443,14 +443,16 @@ ScreenTheme_0:
   ld hl,$C3C8             ; Vector screen addresses, top-left
   ld b,128+16             ; lines count
 ScreenTheme_1:
-  ld c,26
-  push hl
+  ld c,13                 ; number of column pairs, 26 columns
+  push hl                 ; save screen address
 ScreenTheme_2:
+  ld (hl),a
+  inc h
   ld (hl),a
   inc h
   dec c
   jp nz,ScreenTheme_2
-  pop hl
+  pop hl                  ; restore screen address
   dec l
   dec b
   jp nz,ScreenTheme_1
@@ -610,26 +612,51 @@ ClearScreenBlock_2:       ; loop by columns
   pop bc
   ret
 
-; 8-bit random number generator using Refresh Register (R)
-; See http://www.cpcwiki.eu/index.php/Programming:Random_Number_Generator
-;TODO: Rewrite for i8080 CPU
+;Inputs:
+;   (seed1) contains a 16-bit seed value
+;   (seed2) contains a NON-ZERO 16-bit seed value
+;Outputs:
+;   HL is the result
+;   BC is the result of the LCG, so not that great of quality
+;   DE is preserved
+;Destroys:
+;   AF
+;cycle: 4,294,901,760 (almost 4.3 billion)
+; https://wikiti.brandonw.net/index.php?title=Z80_Routines:Math:Random#Combined_LFSR.2FLCG.2C_16-bit_seeds
+Random16:
+    ld hl,(Random16_seed1)
+    ld b,h
+    ld c,l
+    add hl,hl
+    add hl,hl
+    inc l
+    add hl,bc
+    ld (Random16_seed1),hl
+    ld hl,(Random16_seed2)
+    add hl,hl
+    sbc a,a
+    and %00101101
+    xor l
+    ld l,a
+    ld (Random16_seed2),hl
+    add hl,bc
+    ret
+Random16_seed1: dw 12345
+Random16_seed2: dw 54321
+
 GetRandomByte:
-  ld hl,(GetRandomByte_seed)
-;  ld a,r
-  ld d,a
-  ld e,a
-  add hl,de
+  push bc
+  call Random16
+  pop bc
+  ld a,h
   xor l
-  add a,a
-  xor h
-  ld l,a
-  ld (GetRandomByte_seed),hl
   ret
-GetRandomByte_seed: DEFW 12345
 ;
 ; Get random number 0..7
 GetRandom8:
   call GetRandomByte
+  rra
+  rra
   and $07
   ret
 ;
@@ -637,6 +664,7 @@ GetRandom8:
 ; value 10 is for '-' char and we made its probability lower by 1/3
 GetRandom11:
   call GetRandomByte
+  rra
   and $1F                 ; 0..31
 GetRandom11_1:
   cp 11                   ; less than 11?

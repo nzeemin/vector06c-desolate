@@ -26,7 +26,7 @@ Col1111	.equ	ColorBoth	;15
 Start	.equ	200h
 
 	.EXPORT CpHLDE
-	.EXPORT KeysLine0, KeysLine5, KeysLine6, KeysLine7
+	.EXPORT KeysLine0, KeysLine1, KeysLine5, KeysLine6, KeysLine7
 
 ;----------------------------------------------------------------------------
 
@@ -85,6 +85,10 @@ KEYINT:
 	out	3
 	in	2
 	sta	KeysLine0
+	mvi	a, 0FDh
+	out	3
+	in	2
+	sta	KeysLine1
 	mvi	a, 0DFh
 	out	3
 	in	2
@@ -112,6 +116,7 @@ KEYINT:
 	ret
 
 KeysLine0:	.db 11111111b
+KeysLine1:	.db 11111111b
 KeysLine5:	.db 11111111b
 KeysLine6:	.db 11111111b
 KeysLine7:	.db 11111111b
