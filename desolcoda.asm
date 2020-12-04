@@ -11,7 +11,7 @@ CHEAT_HEALTH_999        EQU 0
 
 ;----------------------------------------------------------------------------
 
-  ORG $0200
+  ORG $0280
 Start:
   ld sp,$B300
 ;
@@ -144,7 +144,7 @@ WaitKeyUp:
 ;            Inventory=$06, Escape=$07, Switch look/shoot=$08, Enter=$09, Menu=$0F
 ReadKeyboard:
   ld hl,ReadKeyboard_map  ; Point HL at the keyboard list
-  ld b,5                  ; number of rows to check
+  ld b,6                  ; number of rows to check
 ReadKeyboard_0:        
   ld e,(hl)               ; get address low
   inc hl
@@ -166,18 +166,20 @@ ReadKeyboard_2:
   ld a,(hl)               ; We've found a key, fetch the character code
   or a
   ret
-; Mapping: Arrows; Space - look/shoot, Tab - switch look/shoot,
+; Mapping: Arrows; US/Space - look/shoot, Tab/RusLat - switch look/shoot,
 ;          AR2/ZB/PS - escape, I/M - inventory; P/R - menu, Enter=Enter
 ReadKeyboard_map:
-  DW KeysLine0
+  DW KeyLineEx
+  DB $08,$00,$05,$00,$00,$00,$00,$00  ; R/L SS  US
+  DW KeyLine0
   DB $01,$03,$04,$02,$07,$09,$07,$08  ; Dn  Rt  Up  Lt  ZB  VK  PS  Tab
-  DW KeysLine1
+  DW KeyLine1
   DB $00,$00,$00,$00,$00,$07,$00,$00  ; F5  F4  F3  F2  F1  AR2 Str  ^\
-  DW KeysLine5
+  DW KeyLine5
   DB $00,$00,$06,$00,$00,$00,$06,$00  ;  O   N   M   L   K   J   I   H
-  DW KeysLine6
+  DW KeyLine6
   DB $00,$00,$00,$00,$00,$0F,$00,$0F  ;  W   V   U   T   S   R   Q   P
-  DW KeysLine7
+  DW KeyLine7
   DB $05,$00,$00,$00,$00,$00,$00,$00  ; Spc  ^   ]   \   [   Z   Y   X
 
 ; Get shadow screen address using penCol in L86D7

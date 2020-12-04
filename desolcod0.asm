@@ -23,10 +23,10 @@ Col1111	.equ	ColorBoth	;15
 
 ;----------------------------------------------------------------------------
 
-Start	.equ	200h
+Start	.equ	280h
 
 	.EXPORT CpHLDE
-	.EXPORT KeysLine0, KeysLine1, KeysLine5, KeysLine6, KeysLine7
+	.EXPORT KeyLineEx, KeyLine0, KeyLine1, KeyLine5, KeyLine6, KeyLine7
 
 ;----------------------------------------------------------------------------
 
@@ -44,6 +44,34 @@ Start	.equ	200h
 	sta	38h
 	lxi	h,KEYINT
 	shld	38h+1
+
+; Move encoded block from Start to A000h
+	xra	a
+	lxi	d,Start		; source addr
+	lxi	b,0A000h	; destination addr
+Init_1:
+	ldax	d
+	inx	d
+	stax	b
+	inr	c
+	jnz	Init_1
+	inr	b
+	jnz	Init_1
+
+; Decompress the encoded block from A000h to Start
+	lxi	h,0A000h
+	lxi	d,Start
+	call	unlzsa1
+
+; Clear memory from A000h to FFFFh
+	xra	a
+	lxi	b,0A000h	; destination addr
+Init_2:
+	stax	b
+	inr	c
+	jnz	Init_2
+	inr	b
+	jnz	Init_2
 
 	ei
 	hlt
@@ -78,29 +106,32 @@ Restart:
 
 KEYINT:
 	push	psw
-; Keyboard scan
 	mvi	a, 8Ah
 	out	0
+; Keyboard scan
+	in	1
+	ori	00011111b
+	sta	KeyLineEx
 	mvi	a, 0FEh
 	out	3
 	in	2
-	sta	KeysLine0
+	sta	KeyLine0
 	mvi	a, 0FDh
 	out	3
 	in	2
-	sta	KeysLine1
+	sta	KeyLine1
 	mvi	a, 0DFh
 	out	3
 	in	2
-	sta	KeysLine5
+	sta	KeyLine5
 	mvi	a, 0BFh
 	out	3
 	in	2
-	sta	KeysLine6
+	sta	KeyLine6
 	mvi	a, 07Fh
 	out	3
 	in	2
-	sta	KeysLine7
+	sta	KeyLine7
 ; Scrolling, screen mode, border
 	mvi	a, 88h
 	out	0
@@ -115,11 +146,14 @@ KEYINT:
 	ei
 	ret
 
-KeysLine0:	.db 11111111b
-KeysLine1:	.db 11111111b
-KeysLine5:	.db 11111111b
-KeysLine6:	.db 11111111b
-KeysLine7:	.db 11111111b
+KeyLineEx:	.db 11111111b
+KeyLine0:	.db 11111111b
+KeyLine1:	.db 11111111b
+KeyLine5:	.db 11111111b
+KeyLine6:	.db 11111111b
+KeyLine7:	.db 11111111b
+
+BorderColor:	.db 0		; border color number 0..15
 
 Palette:
 	.db Col0000,Col0001,Col0010,Col0011
@@ -142,6 +176,73 @@ CpHLDE:
 	ora	l	  ;
 	stc	 	  ;
 	pop h
+	ret
+
+; LZSA1 decompressor code by Ivan Gorodetsky
+; https://gitlab.com/ivagor/lzsa8080/-/blob/master/LZSA1/unlzsa1_small.asm
+; input: 	hl=compressed data start
+;		de=uncompressed destination start
+
+.DEFINE NEXT_HL inx h
+.DEFINE ADD_OFFSET xchg\ dad d
+.DEFINE NEXT_DE inx d
+
+unlzsa1:
+	mvi b,0
+ReadToken:
+	mov a,m
+	push psw
+	NEXT_HL
+	ani 70h
+	jz NoLiterals 
+	rrc\ rrc\ rrc\ rrc
+	cpi 7
+	cz ReadLongBA
+	mov c,a
+	call BLOCKCOPY
+NoLiterals:
+	pop psw
+	push d
+	mov e,m
+	NEXT_HL
+	mvi d,0FFh
+	ora a
+	jp ShortOffset
+LongOffset:
+	mov d,m
+	NEXT_HL
+ShortOffset:
+	ani 0Fh
+	adi 3
+	cpi 15+3
+	cz ReadLongBA
+	mov c,a
+	xthl
+	ADD_OFFSET
+	call BLOCKCOPY
+	pop h
+	jmp ReadToken
+ReadLongBA:
+	add m
+	NEXT_HL
+	rnc
+	mov b,a\ mov a,m\ NEXT_HL\ rnz
+	mov c,a\ mov b,m\ NEXT_HL
+	ora b
+	mov a,c
+	rnz
+	pop d
+	pop d
+	ret
+BLOCKCOPY:
+	mov a,m
+	stax d
+	NEXT_HL
+	NEXT_DE
+	dcx b
+	mov a,b
+	ora c
+	jnz $-7
 	ret
 
 ; Filler
