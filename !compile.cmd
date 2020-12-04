@@ -21,11 +21,11 @@ powershell -Command "(gc desolcod0.exp) -replace '.EQU', 'EQU' | Out-File -encod
 if exist desolcod0.exp del desolcod0.exp
 
 @echo on
-tools\pasmo --w8080 desolcoda.asm desolcode.bin desolate.txt
+tools\pasmo --w8080 desolcoda.asm desolcode.bin desolcode.txt
 @if errorlevel 1 goto Failed
 @echo off
 
-findstr /B "Desolate" desolate.txt
+findstr /B "Desolate" desolcode.txt
 
 dir /-c desolcode.bin|findstr /R /C:"desolcode.bin"
 

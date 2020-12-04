@@ -66,30 +66,6 @@ start_2:
 ;  call LBD85  ; Final
 ;  call LBF6F  ; The End
 
-;  ld hl,$0000
-;  ld de,$0116  ; 1 row, 24 cols
-;  call ClearScreenBlock
-;  ld hl,$7F00
-;  ld de,$0116  ; 1 row, 24 cols
-;  call ClearScreenBlock
-;  call ShowShadowScreen
-
-;  call ClearPenRowCol
-;  ld hl,87
-;  call DrawNumber5
-;  call WaitAnyKey
-
-;  xor a
-;  ld (L86D7),a
-;  ld hl,Tileset2+$0C*64
-;  call DrawTileMasked  ;   A = penRow; L86D7 = penCol; HL = tile address
-
-;  ld a,22
-;  ld e,20
-;  ld b,16
-;  ld hl,Tileset3+15*32
-;  call L9E5F    ; Put tile on the screen by XOR; E = row; A = X coord; B = height; HL = tile address
-
 ;  call ShowShadowScreen
 ;  di
 ;  halt
@@ -113,13 +89,6 @@ DesolateDataBeg:
 
 ;----------------------------------------------------------------------------
 DesolateCodeBeg:
-
-; Sound for "Look" or "Shoot" action
-SoundLookShoot:
-;  ld hl,$0190
-;  ld de,$0004
-;  jp ROM_BEEPER
-  ret ;STUB
 
 ; Wait for any key
 WaitAnyKey:

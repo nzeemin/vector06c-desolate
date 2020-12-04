@@ -6,8 +6,8 @@ L9DDD:
   OR A
   JP Z,LB9A2              ; zero => Player is dead
 ;
-;TODO  xor a                   ; black
-;TODO  out ($FE),a             ; set border color
+  xor a                   ; black
+  ld (BorderColor),a      ; set border color
 ;
   CALL LADE5              ; Decode current room to LDBF5; HL = LDBF5
   CALL LA88F              ; Display 96 tiles on the screen
@@ -2936,8 +2936,8 @@ LB994:
   CALL C,LB9A0
   LD (LDB7A),A            ; set Health
 ; Set border to red as an indication of the injury
-;TODO:  ld a,2                  ; red
-;TODO:  out ($FE),a             ; set border color
+  ld a,2                  ; red
+  ld (BorderColor),a      ; set border color
   RET
 LB9A0:
   XOR A

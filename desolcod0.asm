@@ -25,8 +25,9 @@ Col1111	.equ	ColorBoth	;15
 
 Start	.equ	280h
 
-	.EXPORT CpHLDE
 	.EXPORT KeyLineEx, KeyLine0, KeyLine1, KeyLine5, KeyLine6, KeyLine7
+	.EXPORT BorderColor
+	.EXPORT CpHLDE, SoundLookShoot
 
 ;----------------------------------------------------------------------------
 
@@ -139,7 +140,8 @@ KEYINT:
 	out	1
 	mvi	a, 23
 	out	3		; scrolling
-	mvi	a, 00000000b
+	lda	BorderColor
+	ani	0Fh
 	out	2		; screen mode and border
 ;
 	pop	psw
@@ -176,6 +178,21 @@ CpHLDE:
 	ora	l	  ;
 	stc	 	  ;
 	pop h
+	ret
+
+; Short sound on look/shoot action
+SoundLookShoot:
+	MVI  H, 020h	; Counter 1
+	XRA  A
+SoundLookShoot_1:
+	MVI  L, 040h	; Counter 2
+SoundLookShoot_2:
+	DCR  L
+	JNZ     SoundLookShoot_2  ; delay
+	XRI     001h	; inverse bit 0
+	OUT     000h
+	DCR  H
+	JNZ     SoundLookShoot_1  ; Loop 30 times
 	ret
 
 ; LZSA1 decompressor code by Ivan Gorodetsky
@@ -244,6 +261,8 @@ BLOCKCOPY:
 	ora c
 	jnz $-7
 	ret
+
+;----------------------------------------------------------------------------
 
 ; Filler
 	.org	Start-1

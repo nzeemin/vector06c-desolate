@@ -5,10 +5,11 @@
 /SpriteRotate/.vs
 /desolcod0.lst
 /desolcod0.inc
-/desolate.txt
 /*.bin
 /*.rom
+/*.txt
 /original/skoolkit/desolate
 /original/x-*
 /desolate.sjbin
 /desolate.sjsym
+/desolcode.lzsa

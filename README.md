@@ -1,5 +1,5 @@
 # vector06c-desolate
-Porting **Desolate** game from TI-83 Plus calculator to soviet computer Vector-06c (Вектор-06Ц).
+Porting **Desolate** game from TI-83 Plus calculator to soviet computer [Vector-06c](https://en.wikipedia.org/wiki/Vector-06C) (Вектор-06Ц).
 
 Thanks a lot to [zx-pk.ru forum](https://zx-pk.ru/forums/55-vektor.html) members for all the help and support!
 
