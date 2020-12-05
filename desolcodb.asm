@@ -1044,7 +1044,6 @@ LACB8:
   LD (L86D7),HL           ; Set penRow/penCol
   LD HL,SE0B9             ; String with arrow down sign
   jp LBEDE                ; Show message char-by-char
-;  RET
 ;
 ; Small message popup "OMG! This Person Is DEAD! What Happened Here!?!"
 LACC5:
@@ -1071,14 +1070,15 @@ LACE3:
   JP NZ,LAADA             ; => Show the screen, continue the game main loop
   JP LAD5B
 ;
-; Show screen, wait for down key, show small message popup
+; Show screen, wait for any key, show small message popup
 LACF6:
   CALL ShowShadowScreen   ; Copy shadow screen to ZX screen
-  CALL LAD99              ; Wait for Down key
-  jp LAB28
+  call WaitAnyKey         ; was: waiting for Down key
+;  CALL LAD99              ; Wait for Down key
+  jp LAB28                ; Show small message popup
 ;
 LAD00:
-  CALL LACF6              ; Show screen, wait for down key, show small message popup
+  CALL LACF6              ; Show screen, wait for any key, show small message popup
   LD HL,$5816
   LD (L86D7),HL           ; Set penRow/penCol
   LD HL,SE0C9             ; "They Seem To Be Holding"
@@ -1092,7 +1092,7 @@ LAD00:
   LD (LDBC7),A            ; set Items Found count
 LAD22:
   CALL LACB8              ; Show arrow sign in bottom-right corner
-  CALL LACF6              ; Show screen, wait for down key, show small message popup
+  CALL LACF6              ; Show screen, wait for any key, show small message popup
   LD HL,$5830
   LD (L86D7),HL           ; Set penRow/penCol
   LD HL,SE0CF             ; "You Picked Up A"
@@ -1149,13 +1149,6 @@ LAD8F:
   jp NZ,LAD8F
   JP L9E2E                ; Show the screen, continue the game main loop
 ;
-; Wait for Down key
-LAD99:
-  CALL LA0F1              ; Scan keyboard
-  CP $01                  ; Down key?
-  jp NZ,LAD99
-  RET
-;
 ; Wait for Escape key
 LADA1:
   CALL LA0F1              ; Scan keyboard
@@ -1177,7 +1170,7 @@ LADA9:
   LD HL,SE0CD             ; "Hey Whats This  .  .  . ?"
   CALL LBEDE              ; Show message char-by-char
   CALL LACB8              ; Show arrow sign in bottom-right corner
-  CALL LACF6              ; Show screen, wait for down key, show small message popup
+  CALL LACF6              ; Show screen, wait for any key, show small message popup
   LD HL,$5830
   LD (L86D7),HL           ; Set penRow/penCol
   LD HL,SE0CF             ; "You Picked Up A"
@@ -2982,7 +2975,7 @@ LB9D6:
   LD (LDB7A),A            ; set Health = 100
   RET
 ;
-; Decode the block
+; Decode the block from RLE sequence
 ;   HL = address decode from (usually encoded room/screen)
 ;   DE = address decode to
 ;   C = number of bytes to decode
@@ -3129,34 +3122,36 @@ LBADE:
   LD (LDB7D),A            ; set look/shoot switch value = Look
   LD (LDBC7),A            ; clear Items Found count
   CALL LB9D6              ; Clear player variables
-  LD HL,$0000
+  xor a
+  ld l,a
+  ld h,a
   LD (LDBC3),HL           ; clear Player deaths count
   LD (LDBC5),HL           ; clear Aliens Killed count
   LD HL,LDB9C             ; Inventory table address
   LD B,$22                ; 34 bytes
 LBAF9:
-  LD (HL),$00             ; clear
+  LD (HL),a               ; clear
   INC HL
   dec b
   jp nz,LBAF9
   LD HL,LDC5B             ; Inventory list
   LD B,$22                ; 34 bytes
 LBB03:
-  LD (HL),$00             ; clear
+  LD (HL),a               ; clear
   INC HL
   dec b
   jp nz,LBB03
   LD HL,LDB90
   LD B,$09                ; 9 variables to clear
 LBB09:
-  LD (HL),$00             ; Clear 9 variables about the progress
+  LD (HL),a               ; Clear 9 variables about the progress
   INC HL
   dec b
   jp nz,LBB09
   LD HL,LDCA2             ; Table with Access code slots
   LD B,$48                ; 72 bytes
 LBB17:
-  LD (HL),$00             ; clear the slot
+  LD (HL),a               ; clear the slot
   INC HL
   dec b
   jp nz,LBB17
@@ -3171,7 +3166,7 @@ LBB17:
   LD A,50       ; 68 -> 50 for Vector
   LD (LDC59),A            ; set delay factor
   LD (LDC85),A            ; Use delay and copy screen in LBEDE
-  LD A,14   ; was: $0E
+  LD A,14
   LD (LDCF4),A            ; set Line interval for text
   XOR A
   LD (LDCF3),A            ; clear Left margin size for text
@@ -3443,9 +3438,10 @@ LBD11:
   CALL ShowShadowScreen   ; Copy shadow screen to ZX screen
   CALL LAB28              ; Show small message popup
 LBD2B:
-  CALL LA0F1              ; Scan keyboard
-  CP $01                  ;   Down key?
-  jp NZ,LBD2B             ; no => wait some more
+  call WaitAnyKey         ; was: waiting for Down key
+;  CALL LA0F1              ; Scan keyboard
+;  CP $01                  ;   Down key?
+;  jp NZ,LBD2B             ; no => wait some more
   LD HL,LDB90+2
   LD (HL),$01             ; mark Workstation is working now
   LD A,(LDC89)            ; get the current item number
@@ -3625,9 +3621,6 @@ LBEDE:
   LD A,(LDC85)            ; get Delay and copy screen flag
   OR A
   jp Z,LBEF9_1            ; Skip delay and copy screen
-;  ld de,1     ; duration
-;  ld hl,1     ; pitch
-;  call 949    ; call ROM beeper routine
   CALL LB2D0              ; Delay
   CALL ShowShadowScreen   ; Copy shadow screen to ZX screen
 LBEF9_1:

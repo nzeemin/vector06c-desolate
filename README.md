@@ -3,7 +3,7 @@ Porting **Desolate** game from TI-83 Plus calculator to soviet computer [Vector-
 
 Thanks a lot to [zx-pk.ru forum](https://zx-pk.ru/forums/55-vektor.html) members for all the help and support!
 
-Porting status: work in progress.
+Porting status: work in progress, almost done.
 
 ![](screenshot/port-room1.png) ![](screenshot/port-inventory.png) ![](screenshot/port-doorlock.png)
 

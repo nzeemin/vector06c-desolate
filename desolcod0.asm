@@ -182,10 +182,10 @@ CpHLDE:
 
 ; Short sound on look/shoot action
 SoundLookShoot:
-	MVI  H, 020h	; Counter 1
+	MVI  H, 00Ah	; Counter 1
 	XRA  A
 SoundLookShoot_1:
-	MVI  L, 040h	; Counter 2
+	MVI  L, 080h	; Counter 2
 SoundLookShoot_2:
 	DCR  L
 	JNZ     SoundLookShoot_2  ; delay

@@ -431,7 +431,7 @@ ScreenTheme_2:
 
 ; Copy DEDSOLATE title from Main Menu shadow screen to Vector screen
 CopyTitleSign:
-  ld de,$C4F0                   ; Vector screen addresses, top-left
+  ld de,$C4F2                   ; Vector screen addresses, top-left
   ld hl,ShadowScreen+24*8       ; shadow screen address
   ld b,30                       ; lines to copy
   jp ShowShadowScreen_1
