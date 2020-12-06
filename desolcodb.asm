@@ -32,7 +32,7 @@ L9DDD:
 ;
 ; Ending of main game loop
 L9E19:
-  CALL LB653
+  CALL LB653              ; Draw Alien
   CALL LA0F1              ; Scan keyboard
   CP $05                  ; Look/shoot key?
   JP Z,LAAAF              ;   Look / Shoot
@@ -906,7 +906,7 @@ LAB85:
   ADD HL,DE               ; HL = $1C+$07+$04=$27 - offset for Access code slot
   LD A,(HL)
   LD (LDC8B),A            ; set Access code slot number
-  LD A,(LDC8C)            ; Get Access code level
+  LD A,(LDC8C)            ; Get Access code level 0..4
   OR A                    ; Level 0?
   JP Z,LB00E              ; yes => Going to the next room
   JP LAE23                ; Check access and show Door Lock
@@ -1241,7 +1241,7 @@ LAE23:
   LD A,(HL)               ; get value from the slot
   CP $01                  ; code was entered already?
   JP Z,LB00E              ; yes => Going to the next room
-; Need to enter the code
+; Need to enter the code for the slot
   LD B,$04
   LD HL,LDC8D             ; Buffer for entering access code
 LAE3D:
@@ -1271,6 +1271,32 @@ LAE3D:
   LD (LDC84),A            ; set Y pos
   LD A,$06
   LD (LDC57),A            ; set Door Lock pos
+; Check if the access code was entered before for this level
+  call DoorLockGetEnteredFlagAddr
+  ld a,(hl)               ; get "access code was entered for this level" flag
+  or a
+  jp z,LAE80              ; the code wasn't entered => enter the code as usual
+; Access code was entered for this level before, so pre-fill the code
+  call LAFEC              ; LDC8C access code level -> HL = address from LE015 table
+  ld de,LDC8D             ; buffer for entering the code, 4 tile numbers
+  ld a,(hl)
+  ld (de),a
+  inc hl
+  inc de
+  ld a,(hl)
+  ld (de),a
+  inc hl
+  inc de
+  ld a,(hl)
+  ld (de),a
+  inc hl
+  inc de
+  ld a,(hl)
+  ld (de),a
+  ld a,$02
+  ld (LDC57),a            ; set Door Lock pos
+  call DoorLockDisplayCode  ; show the pre-filled code
+; Door Lock loop starts here
 LAE80:
   ld hl,Tileset3+15*32    ; Selection box tile
 ;  PUSH HL
@@ -1332,6 +1358,12 @@ LAED4:
   LD A,(LDC82)            ; get current selection
   LD (HL),A               ; put in the buffer
 ; Show four tiles with the entered code
+  call DoorLockDisplayCode
+  CALL ShowShadowScreen   ; Copy shadow screen to ZX screen
+  JP LAE99                ; Return to Delay and wait for key in Door Lock
+;
+; Show four tiles with the entered code
+DoorLockDisplayCode:
   LD HL,LDC8D             ; Buffer for entering access code
   LD A,4    ; was: $02
   LD C,A
@@ -1366,15 +1398,14 @@ LAEEF:
   LD A,C
   CP 12     ;was: $06
   jp NZ,LAEEF
-  CALL ShowShadowScreen   ; Copy shadow screen to ZX screen
-  JP LAE99                ; Return to Delay and wait for key in Door Lock
+  ret
 ;
 ; Access code entered, need to check
 LAF14:
   LD A,(LDC57)            ; get Door Lock pos
   DEC A
   CP $01
-  jp Z,LAF2C              ; => Code Accepted
+  jp Z,LAF2C              ; => validate the code
 ; Invalid Code
 LAF1D:
   CALL LB09B              ; Preparing to draw string with the result
@@ -1382,7 +1413,7 @@ LAF1D:
   CALL DrawString         ; Show message char-by-char
   CALL ShowShadowScreen   ; Copy shadow screen to ZX screen
   JP LAE99                ; Return to Delay and wait for key in Door Lock
-; Code Accepted!
+; Validate the code entered
 LAF2C:
   LD B,$04
   LD DE,LDC8D             ; Buffer for entering access code
@@ -1392,7 +1423,7 @@ LAF34:
   LD C,A
   LD A,(HL)
   SUB C
-  jp NZ,LAF1D
+  jp NZ,LAF1D             ; -> Invalid Code
   INC DE
   INC HL
   dec b
@@ -1407,6 +1438,9 @@ LAF34:
   LD HL,LDCA2             ; Table with Access code slots
   ADD HL,DE
   LD (HL),$01             ; Mark code here was accepted
+; Remember that we already entered access code for this level
+  call DoorLockGetEnteredFlagAddr
+  ld (hl),$01             ; set the flag  
   call LBA81              ; Delay x40 - added to have a pause after the Accepted message
   JP LB00E                ; Going to the next room
 ;
@@ -1422,7 +1456,7 @@ DoorLock_KeyUp:
   ld A,(LDC82)            ; get Inventory current
   add a,-3
   ld (LDC82),A            ; set Inventory current
-  jp LAE80
+  jp LAE80                ; continue the Door Lock loop
 DoorLock_KeyDown:
   ld a,(LDC84)            ; get Y pos
   cp $60                  ; bottom row already?
@@ -1435,7 +1469,7 @@ DoorLock_KeyDown:
   ld A,(LDC82)            ; get Inventory current
   add a,3
   ld (LDC82),A            ; set Inventory current
-  jp LAE80
+  jp LAE80                ; continue the Door Lock loop
 ; Move selection right
 LAF5A:
   CALL LAFD2              ; Draw selection box by XOR
@@ -1459,7 +1493,7 @@ LAF70:
   LD A,(LDC83)            ; get X pos
   ADD A,-16   ; was: $F8
   LD (LDC83),A            ; set X pos
-  JP LAE80
+  JP LAE80                ; continue the Door Lock loop
 ; Door Lock - key Right
 LAF86:
   LD A,(LDC83)            ; get X pos
@@ -1469,7 +1503,7 @@ LAF86:
   LD A,(LDC83)            ; get X pos
   ADD A,16    ; was: $08
   LD (LDC83),A            ; set X pos
-  JP LAE80
+  JP LAE80                ; continue the Door Lock loop
 ; Move prev row
 LAF9C:
   LD A,(LDC84)            ; get Y pos
@@ -1481,7 +1515,7 @@ LAF9C:
   LD A,(LDC84)            ; get Y pos
   ADD A,-16   ; was: $F8
   LD (LDC84),A            ; set Y pos
-  JP LAE80
+  JP LAE80                ; continue the Door Lock loop
 ; Move next row
 LAFB7:
   LD A,(LDC84)            ; get Y pos
@@ -1493,7 +1527,7 @@ LAFB7:
   LD A,(LDC84)            ; get Y pos
   ADD A,16    ; was: $08
   LD (LDC84),A            ; set Y pos
-  JP LAE80
+  JP LAE80                ; continue the Door Lock loop
 ;
 ; Draw selection box by XOR
 LAFD2:
@@ -1510,7 +1544,7 @@ LAFD2:
 ; LDC8C access code level -> address from LE015 table
 LAFEC:
   PUSH DE
-  LD A,(LDC8C)            ; Get Access code level
+  LD A,(LDC8C)            ; Get Access code level 0..4
   ADD A,A
   LD E,A
   LD D,$00                ; now DE = Level * 2
@@ -1525,7 +1559,7 @@ LAFEC:
 ;
 ; LDC8C access code level -> message address from LE01F table
 LAFFE:
-  LD A,(LDC8C)            ; Get Access code level
+  LD A,(LDC8C)            ; Get Access code level 0..4
   ADD A,A
   LD E,A
   LD D,$00                ; now DE = Level * 2
@@ -1536,6 +1570,16 @@ LAFFE:
   LD H,(HL)
   LD L,A
   RET
+;
+; LDC8C access code level -> "access code was entered for this level before" flag address
+; Returns: HL = address
+DoorLockGetEnteredFlagAddr:
+  ld a,(LDC8C)            ; get Access code level 0..4
+  ld e,a
+  ld d,$00
+  ld hl,DoorLockLevelEntered
+  add hl,de
+  ret
 ;
 ; Going to the next room
 LB00E:
@@ -3155,6 +3199,13 @@ LBB17:
   INC HL
   dec b
   jp nz,LBB17
+  ld hl,DoorLockLevelEntered+1
+  ld b,4
+NewGame_5:                ; Clear 4 flags
+  ld (hl),a
+  inc hl
+  dec b
+  jp nz,NewGame_5
   LD HL,LDC96             ; level 2 access code buffer
   CALL LBC6B              ; Generate random code
   LD HL,LDC9A             ; level 3 access code buffer
