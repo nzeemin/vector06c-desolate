@@ -13,12 +13,11 @@ CHEAT_HEALTH_999        EQU 0
 
   ORG $0280
 Start:
-  ld sp,$B300
+  ld sp,$B2E0
 ;
 ; Draw DESOLATE title sign on top of the screen
-  ld hl,LF4B5             ; Decode from - Main menu screen
-  ld bc,12*3              ; need only 3 tile lines
-  call LADF5              ; Decode screen to LDBF5
+; LDBF5 buffer already pre-filled with 3 lines of the title screen with the big DESOLATE sign
+  LD HL,LDBF5
   call LB177              ; Display screen from tiles with Tileset2
   call CopyTitleSign
   call ClearShadowScreen
@@ -650,9 +649,9 @@ GetRandom11_1:
 ;----------------------------------------------------------------------------
 DesolateCodeEnd:
 
-; Shadow screen, 192 x 138 pixels
-;   12*2*(64*2+10) = 3312 bytes
-ShadowScreen EQU $B300
+; Shadow screen, 192 x 140 pixels
+;   12*2*(64*2+12) = 3360 bytes
+ShadowScreen EQU $B2E0
 
   IF DesolateCodeEnd > ShadowScreen
   .ERROR DesolateCodeEnd overlaps ShadowScreen

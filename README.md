@@ -3,9 +3,17 @@ Porting **Desolate** game from TI-83 Plus calculator to soviet computer [Vector-
 
 Thanks a lot to [zx-pk.ru forum](https://zx-pk.ru/forums/55-vektor.html) members for all the help and support!
 
-Porting status: work in progress, almost done.
+Porting status: released.
 
 ![](screenshot/port-room1.png) ![](screenshot/port-inventory.png) ![](screenshot/port-doorlock.png)
+
+Controls to use in the game:
+ - Movement: arrows
+ - Look/shoot: <kbd>УС</kbd>, <kbd>Space</kbd>
+ - Look/Shoot switch: <kbd>ТАБ</kbd>, <kbd>РУС/ЛАТ</kbd>
+ - Inventory: <kbd>I</kbd>, <kbd>M</kbd>
+ - Close all pop-ups (Escape): <kbd>АР2</kbd>, <kbd>ЗБ</kbd>, <kbd>ПС</kbd>
+ - Exit to Menu: <kbd>P</kbd>, <kbd>R</kbd>
 
 
 ## The original game
@@ -44,4 +52,5 @@ To run the game on Wabbitemu emulator:
 
  - [Discussion on zx-pk.ru (in Russian)](https://zx-pk.ru/threads/32499-sovremennaya-razrabotka-pod-vektor.html)
  - [Desolate port on ZX Spectrum](https://github.com/nzeemin/spectrum-desolate)
+ - [Desolate port on UKNC](https://github.com/nzeemin/uknc-desolate)
 

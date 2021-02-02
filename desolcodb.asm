@@ -3082,9 +3082,7 @@ MenuFromGame:
 LBA3D:
   LD A,(LDC55)            ; get Menu background phase
   INC A
-  CP $08
-;TODO: Just AND $07
-  CALL Z,LBC2F
+  AND $07
   LD (LDC55),A            ; set Menu background phase
 ;  DI
   LD HL,LF515             ; Main menu screen moving background, 96 tiles
@@ -3110,6 +3108,8 @@ LBA3D:
   JP Z,LBBCC
   CP $01                  ; Down key
   JP Z,LBBDC
+  LD HL,Random16_seed1
+  INC (HL)                ; Change random seed
   jp LBA3D                ; Return to main Menu
 ;
 ;NOTE: LBA81 routine moved close to LBC34
@@ -3334,11 +3334,6 @@ LBC29:
   LD A,(LDC55)            ; get Menu background phase
   ADD A,L
   LD L,A
-  RET
-;
-LBC2F:
-  XOR A
-  LD (LDC55),A            ; clear Menu background phase
   RET
 ;
 ; Delay x40
