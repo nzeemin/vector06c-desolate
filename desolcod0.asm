@@ -60,9 +60,9 @@ Init_1:
 	jnz	Init_1
 
 ; Decompress the encoded block from A000h to Start
-	lxi	h,0A000h
-	lxi	d,Start
-	call	unlzsa1
+	lxi	d,0A000h
+	lxi	b,Start
+	call	dzx0
 
 ; Clear memory from A000h to FFFFh
 	xra	a
@@ -195,72 +195,118 @@ SoundLookShoot_2:
 	JNZ     SoundLookShoot_1  ; Loop 30 times
 	ret
 
-; LZSA1 decompressor code by Ivan Gorodetsky
-; https://gitlab.com/ivagor/lzsa8080/-/blob/master/LZSA1/unlzsa1_small.asm
-; input: 	hl=compressed data start
-;		de=uncompressed destination start
+; ZX0 decompressor code by Ivan Gorodetsky
+; https://github.com/ivagorRetrocomp/DeZX/blob/main/ZX0/8080/OLD_V1/dzx0_CLASSIC.asm
+; input: 	de=compressed data start
+;			bc=uncompressed destination start
 
-.DEFINE NEXT_HL inx h
-.DEFINE ADD_OFFSET xchg\ dad d
-.DEFINE NEXT_DE inx d
+#ifdef BACKWARD
+#define NEXT_HL dcx h
+#define NEXT_DE dcx d
+#define NEXT_BC dcx b
+#else
+#define NEXT_HL inx h
+#define NEXT_DE inx d
+#define NEXT_BC inx b
+#endif
 
-unlzsa1:
-	mvi b,0
-ReadToken:
-	mov a,m
-	push psw
-	NEXT_HL
-	ani 70h
-	jz NoLiterals 
-	rrc\ rrc\ rrc\ rrc
-	cpi 7
-	cz ReadLongBA
-	mov c,a
-	call BLOCKCOPY
-NoLiterals:
-	pop psw
-	push d
-	mov e,m
-	NEXT_HL
-	mvi d,0FFh
-	ora a
-	jp ShortOffset
-LongOffset:
-	mov d,m
-	NEXT_HL
-ShortOffset:
-	ani 0Fh
-	adi 3
-	cpi 15+3
-	cz ReadLongBA
-	mov c,a
-	xthl
-	ADD_OFFSET
-	call BLOCKCOPY
-	pop h
-	jmp ReadToken
-ReadLongBA:
-	add m
-	NEXT_HL
-	rnc
-	mov b,a\ mov a,m\ NEXT_HL\ rnz
-	mov c,a\ mov b,m\ NEXT_HL
-	ora b
-	mov a,c
-	rnz
-	pop d
-	pop d
-	ret
-BLOCKCOPY:
-	mov a,m
-	stax d
-	NEXT_HL
-	NEXT_DE
-	dcx b
-	mov a,b
-	ora c
-	jnz $-7
-	ret
+dzx0:
+#ifdef BACKWARD
+		lxi h,1
+		push h
+		dcr l
+#else
+		lxi h,0FFFFh
+		push h
+		inx h
+#endif
+		mvi a,080h
+dzx0_literals:
+		call dzx0_elias
+		call dzx0_ldir
+		jc dzx0_new_offset
+		call dzx0_elias
+dzx0_copy:
+		xchg
+		xthl
+		push h
+		dad b
+		xchg
+		call dzx0_ldir
+		xchg
+		pop h
+		xthl
+		xchg
+		jnc dzx0_literals
+dzx0_new_offset:
+		call dzx0_elias
+#ifdef BACKWARD
+		inx sp
+		inx sp
+		dcr h
+		rz
+		dcr l
+		push psw
+		mov a,l
+#else
+		mov h,a
+		pop psw
+		xra a
+		sub l
+		rz
+		push h
+#endif
+		rar\ mov h,a
+		ldax d
+		rar\ mov l,a
+		NEXT_DE
+#ifdef BACKWARD
+		inx h
+#endif
+		xthl
+		mov a,h
+		lxi h,1
+#ifdef BACKWARD
+		cc dzx0_elias_backtrack
+#else
+		cnc dzx0_elias_backtrack
+#endif
+		inx h
+		jmp dzx0_copy
+dzx0_elias:
+		inr l
+dzx0_elias_loop:	
+		add a
+		jnz dzx0_elias_skip
+		ldax d
+		NEXT_DE
+		ral
+dzx0_elias_skip:
+#ifdef BACKWARD
+		rnc
+#else
+		rc
+#endif
+dzx0_elias_backtrack:
+		dad h
+		add a
+		jnc dzx0_elias_loop
+		jmp dzx0_elias
+
+dzx0_ldir:
+		push psw
+dzx0_ldir1:
+		ldax d
+		stax b
+		NEXT_DE
+		NEXT_BC
+		dcx h
+		mov a,h
+		ora l
+		jnz dzx0_ldir1
+		pop psw
+		add a
+		ret 
 
 ;----------------------------------------------------------------------------
 

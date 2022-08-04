@@ -4,7 +4,7 @@ if exist desolcod0.bin del desolcod0.bin
 if exist desolcod0.inc del desolcod0.inc
 if exist desolcode.bin del desolcode.bin
 if exist desolcode.txt del desolcode.txt
-if exist desolcode.lzsa del desolcode.lzsa
+if exist desolcode.zx0 del desolcode.zx0
 
 rem Define ESCchar to use in ANSI escape sequences
 rem https://stackoverflow.com/questions/2048509/how-to-echo-with-different-colors-in-the-windows-command-line
@@ -29,11 +29,11 @@ findstr /B "Desolate" desolcode.txt
 
 dir /-c desolcode.bin|findstr /R /C:"desolcode.bin"
 
-tools\lzsa.exe -f1 -r -c desolcode.bin desolcode.lzsa
+tools\zx0.exe -c -q desolcode.bin desolcode.zx0
 
-dir /-c desolcode.lzsa|findstr /R /C:"desolcode.lzsa"
+dir /-c desolcode.zx0|findstr /R /C:"desolcode.zx0"
 
-copy /b desolcod0.bin+desolcode.lzsa desolate.rom >nul
+copy /b desolcod0.bin+desolcode.zx0 desolate.rom >nul
 
 dir /-c desolate.rom|findstr /R /C:"desolate.rom"
 

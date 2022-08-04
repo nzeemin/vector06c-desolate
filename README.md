@@ -44,8 +44,8 @@ To run the game on Wabbitemu emulator:
  - `tasm.exe` compatible with Windows 10 + `TASM85.TAB`
    http://old-dos.ru/dl.php?id=1926
 
- - `lzsa.exe`
-   https://github.com/emmanuel-marty/lzsa/releases
+ - `zx0.exe`
+   https://github.com/einar-saukas/ZX0/blob/main/win/zx0.exe
 
 
 ## Links
