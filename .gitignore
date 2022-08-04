@@ -8,8 +8,8 @@
 /*.bin
 /*.rom
 /*.txt
+/*.zx0
 /original/skoolkit/desolate
 /original/x-*
 /desolate.sjbin
 /desolate.sjsym
-/desolcode.lzsa

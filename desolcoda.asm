@@ -9,11 +9,38 @@ CHEAT_ALL_INVENTORY     EQU 0
 CHEAT_HAVE_WEAPON       EQU 0
 CHEAT_HEALTH_999        EQU 0
 
+MirrorTab        EQU 0B100h
+
 ;----------------------------------------------------------------------------
 
   ORG $0280
 Start:
-  ld sp,$B2E0
+;  ld sp,$B2E0
+  ld sp,MirrorTab
+  
+  ld de,MirrorTab
+GenMirrorTab:
+  ld h,e
+  add hl,hl
+  rra       ; 0
+  add hl,hl
+  rra       ; 1
+  add hl,hl
+  rra       ; 2
+  add hl,hl
+  rra       ; 3
+  add hl,hl
+  rra       ; 4
+  add hl,hl
+  rra       ; 5
+  add hl,hl
+  rra       ; 6
+  add hl,hl
+  rra       ; 7
+  ld (de),a
+  inc e
+  jp nz,GenMirrorTab
+  
 ;
 ; Draw DESOLATE title sign on top of the screen
 ; LDBF5 buffer already pre-filled with 3 lines of the title screen with the big DESOLATE sign
@@ -154,7 +181,7 @@ ReadKeyboard_map:
 ;   A = row 0..137
 ;   (L86D7) = penCol 0..191
 ; Returns HL = address
-; Clock timing: 175
+; Clock timing: (208-228 on v06c)
 GetScreenAddr:
   push de
   ld l,a
@@ -169,68 +196,258 @@ GetScreenAddr:
   ld de,ShadowScreen
   add hl,de
   ld a,(L86D7)  ; get penCol
-  or a
-  rra           ; shift right
-  or a
-  rra           ;
-  or a
-  rra           ; now A = 8px column
-  ld e,a
-  ld d,$00
-  add hl,de     ; now HL = line address + column
+  rrca
+  rrca
+  rrca
+  and 00011111b
+                ; now A = 8px column
   pop de
+    add a,l     
+    ld l,a      ; now HL = line address + column
+  ret nc
+  inc h
   ret
 
 ; Draw tile with mask 16x16 -> 16x16 on shadow screen - for Tileset2 tiles
 ;   A = penRow; L86D7 = penCol; HL = tile address
 DrawTileMasked:
+  ld (SetSP7+1),hl
   ex de,hl      ; now DE = tile address
+ 	ld hl,0
+	add hl,sp
+	ld (SetSP8+1),hl
   call GetScreenAddr	; now HL = screen addr
-  ld b,8        ; 8 row pairs = 16 rows
-DrawTileMasked_1:
-  push bc
   ld bc,24-1    ; increment to the next line
-; Draw 1st line
-  ld a,(de)     ; get mask
-  inc de
-  and (hl)
-  ex de,hl      ; now DE = screen addr, HL = tile addr
-  or (hl)
-  ex de,hl      ; now DE = tile addr, HL = screen addr
-  ld (hl),a     ; write 1st byte
-  inc de
-  inc hl
-  ld a,(de)     ; get mask
-  inc de
-  and (hl)
-  ex de,hl      ; now DE = screen addr, HL = tile addr
-  or (hl)
-  ex de,hl      ; now DE = tile addr, HL = screen addr
-  ld (hl),a     ; write 2nd byte
-  inc de
-  add hl,bc     ; to the 2nd line
-; Draw 2nd line
-  ld a,(de)     ; get mask
-  inc de
-  and (hl)
-  ex de,hl      ; now DE = screen addr, HL = tile addr
-  or (hl)
-  ex de,hl      ; now DE = tile addr, HL = screen addr
-  ld (hl),a     ; write 1st byte
-  inc de
-  inc hl
-  ld a,(de)     ; get mask
-  inc de
-  and (hl)
-  ex de,hl      ; now DE = screen addr, HL = tile addr
-  or (hl)
-  ex de,hl      ; now DE = tile addr, HL = screen addr
-  ld (hl),a     ; write 2nd byte
-  inc de
-  add hl,bc     ; to the next line
-  pop bc
-  dec b
-  jp nz,DrawTileMasked_1
+	di
+SetSP7:
+	ld sp,0
+	
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	inc hl
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	add hl,bc
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	inc hl
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	add hl,bc
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	inc hl
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	add hl,bc
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	inc hl
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	add hl,bc
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	inc hl
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	add hl,bc
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	inc hl
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	add hl,bc
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	inc hl
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	add hl,bc
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	inc hl
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	add hl,bc
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	inc hl
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	add hl,bc
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	inc hl
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	add hl,bc
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	inc hl
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	add hl,bc
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	inc hl
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	add hl,bc
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	inc hl
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	add hl,bc
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	inc hl
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	add hl,bc
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	inc hl
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	add hl,bc
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	inc hl
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+
+SetSP8:
+	ld sp,0
+	ei
   ret
 
 ; Draw string  on shadow screen using FontProto
@@ -430,119 +647,104 @@ ScreenTheme_2:
 
 ; Copy DEDSOLATE title from Main Menu shadow screen to Vector screen
 CopyTitleSign:
-  ld de,$C4F2                   ; Vector screen addresses, top-left
-  ld hl,ShadowScreen+24*8       ; shadow screen address
-  ld b,30                       ; lines to copy
+  di
+  ld hl,0
+  add hl,sp
+  ld (SetSP1+1),hl
+  ld hl,$C4F2                   ; Vector screen addresses, top-left
+  ld sp,ShadowScreen+24*8            ; shadow screen address
+  ld a,30                      ; 30 lines
   jp ShowShadowScreen_1
 ;
 ; Copy shadow screen 24*128=3072 bytes to Vector screen
 ShowShadowScreen:
-  ld de,$E4C0                   ; Vector screen addresses, top-left
-  ld hl,ShadowScreen            ; shadow screen address
-  ld b,128                      ; 128 lines
+  di
+  ld hl,0
+  add hl,sp
+  ld (SetSP1+1),hl
+  ld hl,$E4C0                   ; Vector screen addresses, top-left
+  ld sp,ShadowScreen            ; shadow screen address
+  ld a,128                      ; 128 lines
 ShowShadowScreen_1:             ; loop by A
-  push de
-  ld a,(hl)                     ; byte 0
-  ld (de),a
-  inc hl
-  inc d
-  ld a,(hl)                     ; byte 1
-  ld (de),a
-  inc hl
-  inc d
-  ld a,(hl)                     ; byte 2
-  ld (de),a
-  inc hl
-  inc d
-  ld a,(hl)                     ; byte 3
-  ld (de),a
-  inc hl
-  inc d
-  ld a,(hl)                     ; byte 4
-  ld (de),a
-  inc hl
-  inc d
-  ld a,(hl)                     ; byte 5
-  ld (de),a
-  inc hl
-  inc d
-  ld a,(hl)                     ; byte 6
-  ld (de),a
-  inc hl
-  inc d
-  ld a,(hl)                     ; byte 7
-  ld (de),a
-  inc hl
-  inc d
-  ld a,(hl)                     ; byte 8
-  ld (de),a
-  inc hl
-  inc d
-  ld a,(hl)                     ; byte 9
-  ld (de),a
-  inc hl
-  inc d
-  ld a,(hl)                     ; byte 10
-  ld (de),a
-  inc hl
-  inc d
-  ld a,(hl)                     ; byte 11
-  ld (de),a
-  inc hl
-  inc d
-  ld a,(hl)                     ; byte 12
-  ld (de),a
-  inc hl
-  inc d
-  ld a,(hl)                     ; byte 13
-  ld (de),a
-  inc hl
-  inc d
-  ld a,(hl)                     ; byte 14
-  ld (de),a
-  inc hl
-  inc d
-  ld a,(hl)                     ; byte 15
-  ld (de),a
-  inc hl
-  inc d
-  ld a,(hl)                     ; byte 16
-  ld (de),a
-  inc hl
-  inc d
-  ld a,(hl)                     ; byte 17
-  ld (de),a
-  inc hl
-  inc d
-  ld a,(hl)                     ; byte 18
-  ld (de),a
-  inc hl
-  inc d
-  ld a,(hl)                     ; byte 19
-  ld (de),a
-  inc hl
-  inc d
-  ld a,(hl)                     ; byte 20
-  ld (de),a
-  inc hl
-  inc d
-  ld a,(hl)                     ; byte 21
-  ld (de),a
-  inc hl
-  inc d
-  ld a,(hl)                     ; byte 22
-  ld (de),a
-  inc hl
-  inc d
-  ld a,(hl)                     ; byte 23
-  ld (de),a
-  inc hl
-;  inc d
-; Continue the loop
-  pop de
-  dec e                         ; next line
-  dec b                         ; loop counter for line pairs
+	pop bc
+	ld (hl),c
+	inc h
+	ld (hl),b
+	inc h
+
+	pop bc
+	ld (hl),c
+	inc h
+	ld (hl),b
+	inc h
+
+	pop bc
+	ld (hl),c
+	inc h
+	ld (hl),b
+	inc h
+
+	pop bc
+	ld (hl),c
+	inc h
+	ld (hl),b
+	inc h
+
+	pop bc
+	ld (hl),c
+	inc h
+	ld (hl),b
+	inc h
+
+	pop bc
+	ld (hl),c
+	inc h
+	ld (hl),b
+	inc h
+
+	pop bc
+	ld (hl),c
+	inc h
+	ld (hl),b
+	inc h
+
+	pop bc
+	ld (hl),c
+	inc h
+	ld (hl),b
+	inc h
+
+	pop bc
+	ld (hl),c
+	inc h
+	ld (hl),b
+	inc h
+
+	pop bc
+	ld (hl),c
+	inc h
+	ld (hl),b
+	inc h
+
+	pop bc
+	ld (hl),c
+	inc h
+	ld (hl),b
+	inc h
+
+	pop bc
+	ld (hl),c
+	inc h
+	ld (hl),b
+
+	ld bc,0E8FFh
+	add hl,bc
+
+  dec a                         ; loop counter for line pairs
   jp nz,ShowShadowScreen_1      ; continue the loop
+SetSP1:
+	ld sp,0
+	ei
   ret
 
 ; Clear block on the shadow screen
@@ -653,8 +855,8 @@ DesolateCodeEnd:
 ;   12*2*(64*2+12) = 3360 bytes
 ShadowScreen EQU $B2E0
 
-  IF DesolateCodeEnd > ShadowScreen
-  .ERROR DesolateCodeEnd overlaps ShadowScreen
+  IF DesolateCodeEnd > MirrorTab
+  .ERROR DesolateCodeEnd overlaps MirrorTab
   ENDIF
 
 ;----------------------------------------------------------------------------

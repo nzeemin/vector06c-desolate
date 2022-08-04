@@ -29,7 +29,7 @@ findstr /B "Desolate" desolcode.txt
 
 dir /-c desolcode.bin|findstr /R /C:"desolcode.bin"
 
-tools\zx0.exe -c -q desolcode.bin desolcode.zx0
+tools\salvador.exe -classic desolcode.bin desolcode.zx0
 
 dir /-c desolcode.zx0|findstr /R /C:"desolcode.zx0"
 

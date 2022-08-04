@@ -62,6 +62,10 @@ L9E51:
 ; Put tile on the screen (NOT aligned to 8px column), 16x?? -> 16x?? on shadow screen
 ; Uses XOR operation so it is revertable.
 ;   E = row; A = X coord; B = height; HL = tile address
+ShiftsTab:
+	dw Shift0,Shift1,Shift2,Shift3
+	dw Shift4,Shift5,Shift6,Shift7
+
 L9E5F:
   push hl                 ; store tile address
   ld h,$00
@@ -74,15 +78,27 @@ L9E5F:
   add hl,hl               ; now HL = L * 24
   ld e,a
   and $07
+  add a,a
+  push hl
+  push bc
+  ld hl,ShiftsTab
   ld c,a                  ; C = offset within 8px column, 0..7
+  ld b,0
+  add hl,bc
+  ld a,(hl)
+  inc hl
+  ld h,(hl)
+	ld l,a
+	ld (SetJmp+1),hl
+	pop bc
+	pop hl
+
   ld a,e
-  or a
-  rra
-  or a
-  rra
-  or a
-  rra                     ; E = number of 8px column
-  ld e,a
+  rrca
+  rrca
+  rrca
+  and 00011111b
+  ld e,a					; E = number of 8px column
   add hl,de               ; now HL = offset on the shadow screen
   ld de,ShadowScreen
   add hl,de               ; HL = address in the shadow screen
@@ -95,27 +111,46 @@ L9E8D:                    ; loop by B - by rows
   ld a,(de)
   inc de
   push de
-  ld d,a                  ; D = 2nd byte
-  ld e,$00                ; E = 3rd byte
-  ld a,c
-  or a                    ; shift = 0?
-  jp z,L9E9D              ; yes => skip all shift ops
-L9E96:
-  ld a,b
-  or a
-  rra
-  ld b,a
-  ld a,d
-  rra
-  ld d,a
-  ld a,e
-  rra
-  ld e,a
-  dec c
-  jp nz,L9E96
+  push hl
+  ld l,a
+  ld h,b
+  xor a
+SetJmp:
+	jp Shift0
+;L9E96: 
+Shift0:
+	ld a,h
+	ld h,l
+	ld l,0
+	jp L9E9D
+Shift1:
+	add hl,hl
+	adc a,a
+Shift2:
+	add hl,hl
+	adc a,a
+Shift3:
+	add hl,hl
+	adc a,a
+Shift4:
+	add hl,hl
+	adc a,a
+Shift5:
+	add hl,hl
+	adc a,a
+Shift6:
+	add hl,hl
+	adc a,a
+Shift7:
+	add hl,hl
+	adc a,a
 L9E9D:
-  ld a,(hl)               ; get 1st byte from the screen
-  xor b
+	ex de,hl
+	pop hl
+
+	xor (hl)
+;  ld a,(hl)               ; get 1st byte from the screen
+;  xor b
   ld (hl),a               ; put byte on the screen
   inc hl
   ld a,(hl)               ; get 2nd byte from the screen
@@ -133,58 +168,12 @@ L9E9D:
   jp nz,L9E8D              ; continue loop by rows
   ret
 
-; Put background tile on the screen, 16x16 -> 16x16 on shadow screen, no mask
-;   A = row 0..128-16; E = tile column 0..11; HL = tile address
-L9EAD:
-  push af               ; store row
-  ld a,e                ; get tile column 0..11
-  add a,a
-  add a,a
-  add a,a
-  add a,a
-  ld (L86D7),a          ; penCol
-  pop af                ; restore row
-  ex de,hl              ; now DE = tile address
-  call GetScreenAddr    ; now HL = screen addr
-  ex de,hl              ; now HL = tile address, DE = shadow screen address
-  ld b,8                ; 8 row pairs
-L9EAD_1:
-  push bc
-  ld bc,24-1            ; increment to the next line
-; Draw 1st line
-  ld a,(hl)
-  ld (de),a              ; put 1st byte
-  inc hl
-  inc de
-  ld a,(hl)
-  ld (de),a              ; put 2nd byte
-  inc hl
-  ex de,hl
-  add hl,bc             ; to the 2nd line
-  ex de,hl
-; Draw 2nd line
-  ld a,(hl)
-  ld (de),a              ; put 1st byte
-  inc hl
-  inc de
-  ld a,(hl)
-  ld (de),a              ; put 2nd byte
-  inc hl
-  ex de,hl
-  add hl,bc             ; to the 2nd line
-  ex de,hl
-; Continue the loop
-  pop bc
-  dec b
-  jp nz,L9EAD_1
-  ret
-
 ; Draw sprite
 ;   DE = sprite address; H = column; L = row
 ;   A = bits 0..5 - sub-sprite; bit7=1 - reflect horz (was: bit6=1 - reflect vert)
 L9EDE:
   PUSH HL                 ; store column/row
-  PUSH AF                 ; store A to chech bit 7 later
+  ld c,a                 ; store A to chech bit 7 later
   AND $3F
   LD H,$00
   LD L,A
@@ -195,48 +184,18 @@ L9EDE:
   add hl,hl
   add hl,hl
   ADD HL,DE               ; now HL = source sprite address
-  LD DE,L9FAF             ; DE = buffer address
-  LD b,8
-L9EDE_copy:               ; Copy sprite into the buffer
-  ld a,(hl)
-  ld (de),a               ; 0
-  inc hl
-  inc de
-  ld a,(hl)
-  ld (de),a               ; 1
-  inc hl
-  inc de
-  ld a,(hl)
-  ld (de),a               ; 2
-  inc hl
-  inc de
-  ld a,(hl)
-  ld (de),a               ; 3
-  inc hl
-  inc de
-  ld a,(hl)
-  ld (de),a               ; 4
-  inc hl
-  inc de
-  ld a,(hl)
-  ld (de),a               ; 5
-  inc hl
-  inc de
-  ld a,(hl)
-  ld (de),a               ; 6
-  inc hl
-  inc de
-  ld a,(hl)
-  ld (de),a               ; 7
-  inc hl
-  inc de
-  dec b
-  jp nz,L9EDE_copy
-  POP AF
-;  BIT 7,A
-  or a                    ; test bit 7
-  call m,L9EDE_HR         ; Reflect sprite horizontally
+  ld (SetSP4+1),hl
+  ld (SetSP5+1),hl
+
+  ld hl,2
+  add hl,sp
+  ld (SetSP3+1),hl
+  ld (SetSP6+1),hl
   POP HL                  ; restore column/row
+;  BIT 7,A
+	xor a
+  or c                    ; test bit 7
+	jp m,L9EDE_HR			; Reflect sprite horizontally
   LD A,H
   LD H,$00
   LD B,H
@@ -250,116 +209,627 @@ L9EDE_copy:               ; Copy sprite into the buffer
   ADD HL,BC               ; now HL = offset on the shadow screen
   ld bc,ShadowScreen
   ADD HL,BC
-  LD de,L9FAF             ; sprite buffer address
-  LD B,$08                ; 8 line pairs
-L9EDE_0:                  ; loop by B
-  PUSH BC
   ld bc,24-1              ; increment to the next line
-; Process 1st line
-  ld a,(de)               ; get mask byte
-  inc de
-  and (hl)
-  ex de,hl
-  or (hl)                 ; use pixels byte
-  ex de,hl
-  inc de
-  ld (hl),a               ; put 1st byte
-  inc hl
-  ld a,(de)               ; get mask byte
-  inc de
-  and (hl)
-  ex de,hl
-  or (hl)                 ; use pixels byte
-  ex de,hl
-  inc de
-  ld (hl),a               ; put 2nd byte
-  add hl,bc               ; next line
-; Process 2nd line
-  ld a,(de)               ; get mask byte
-  inc de
-  and (hl)
-  ex de,hl
-  or (hl)                 ; use pixels byte
-  ex de,hl
-  inc de
-  ld (hl),a               ; put 1st byte
-  inc hl
-  ld a,(de)               ; get mask byte
-  inc de
-  and (hl)
-  ex de,hl
-  or (hl)                 ; use pixels byte
-  ex de,hl
-  inc de
-  ld (hl),a               ; put 2nd byte
-  add hl,bc               ; next line
-; Continue the loop
-  POP BC
-  dec b
-  jp nz,L9EDE_0
+	di
+SetSP4:
+	ld sp,0
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	inc hl
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	add hl,bc
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	inc hl
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	add hl,bc
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	inc hl
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	add hl,bc
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	inc hl
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	add hl,bc
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	inc hl
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	add hl,bc
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	inc hl
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	add hl,bc
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	inc hl
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	add hl,bc
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	inc hl
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	add hl,bc
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	inc hl
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	add hl,bc
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	inc hl
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	add hl,bc
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	inc hl
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	add hl,bc
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	inc hl
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	add hl,bc
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	inc hl
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	add hl,bc
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	inc hl
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	add hl,bc
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	inc hl
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	add hl,bc
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+	inc hl
+
+	pop de
+	ld a,(hl)
+	and e
+	or d
+	ld (hl),a
+
+SetSP3:
+	ld sp,0
+	ei
   RET
 ; Horizontal reflection
 L9EDE_HR:
-  push af
-  ld hl,L9FAF
-  ld b,16
-L9EDE_HR_1:
-; Exchange bytes 0 <-> 2, 1 <-> 3, with byte flip
-  push hl
-  ld c,(hl)               ; get byte 0
-  inc hl
-  ld d,(hl)               ; get byte 1
-  inc hl
-  ld a,(hl)               ; get byte 2
-  inc hl
-  ld e,(hl)               ; get byte 3
-  pop hl
-  call ReflectByte        ; flip byte 2
-  ld (hl),a               ; put flipped byte 2 -> byte 0
-  inc hl
-  ld a,e
-  call ReflectByte        ; flip byte 3
-  ld (hl),a               ; put flipped byte 3 -> byte 1
-  inc hl
-  ld a,c
-  call ReflectByte        ; flip byte 0
-  ld (hl),a               ; put flipped byte 0 -> byte 2
-  inc hl
-  ld  a,d
-  call ReflectByte        ; flip byte 1
-  ld (hl),a               ; put flipped byte 1 -> byte 3
-  inc hl
-; Continue the loop
-  dec b
-  jp nz,L9EDE_HR_1
-  pop af
-  ret
-;
-L9FAF:                    ; Sprite buffer
-  DEFS 64,$00
-;
-; Reflect byte bits of A
-ReflectByte:
-  push hl
-  ld h,a
-  add hl,hl
-  rra       ; 0
-  add hl,hl
-  rra       ; 1
-  add hl,hl
-  rra       ; 2
-  add hl,hl
-  rra       ; 3
-  add hl,hl
-  rra       ; 4
-  add hl,hl
-  rra       ; 5
-  add hl,hl
-  rra       ; 6
-  add hl,hl
-  rra       ; 7
-  pop hl
-  ret
+  LD A,H
+  LD H,$00
+  LD B,H
+  LD C,L                  ; get row
+  ADD HL,BC
+  ADD HL,BC
+  ADD HL,HL
+  ADD HL,HL
+  add hl,hl               ; now HL = row * 24
+  LD C,A
+  ADD HL,BC               ; now HL = offset on the shadow screen
+  ld bc,ShadowScreen
+  ADD HL,BC
+	inc hl
+	ld b,MirrorTab>>8
+	di
+SetSP5:
+	ld sp,0
+	pop de
+	ld c,d
+	ld a,(bc)
+	ld d,a
+	ld c,e
+	ld a,(bc)
+	and (hl)
+	or d
+	ld (hl),a
+	dec hl
+
+	pop de
+	ld c,d
+	ld a,(bc)
+	ld d,a
+	ld c,e
+	ld a,(bc)
+	and (hl)
+	or d
+	ld (hl),a
+	ld de,24+1			; increment to the next line
+	add hl,de
+
+	pop de
+	ld c,d
+	ld a,(bc)
+	ld d,a
+	ld c,e
+	ld a,(bc)
+	and (hl)
+	or d
+	ld (hl),a
+	dec hl
+
+	pop de
+	ld c,d
+	ld a,(bc)
+	ld d,a
+	ld c,e
+	ld a,(bc)
+	and (hl)
+	or d
+	ld (hl),a
+	ld de,24+1
+	add hl,de
+
+	pop de
+	ld c,d
+	ld a,(bc)
+	ld d,a
+	ld c,e
+	ld a,(bc)
+	and (hl)
+	or d
+	ld (hl),a
+	dec hl
+
+	pop de
+	ld c,d
+	ld a,(bc)
+	ld d,a
+	ld c,e
+	ld a,(bc)
+	and (hl)
+	or d
+	ld (hl),a
+	ld de,24+1
+	add hl,de
+
+	pop de
+	ld c,d
+	ld a,(bc)
+	ld d,a
+	ld c,e
+	ld a,(bc)
+	and (hl)
+	or d
+	ld (hl),a
+	dec hl
+
+	pop de
+	ld c,d
+	ld a,(bc)
+	ld d,a
+	ld c,e
+	ld a,(bc)
+	and (hl)
+	or d
+	ld (hl),a
+	ld de,24+1
+	add hl,de
+
+	pop de
+	ld c,d
+	ld a,(bc)
+	ld d,a
+	ld c,e
+	ld a,(bc)
+	and (hl)
+	or d
+	ld (hl),a
+	dec hl
+
+	pop de
+	ld c,d
+	ld a,(bc)
+	ld d,a
+	ld c,e
+	ld a,(bc)
+	and (hl)
+	or d
+	ld (hl),a
+	ld de,24+1
+	add hl,de
+
+	pop de
+	ld c,d
+	ld a,(bc)
+	ld d,a
+	ld c,e
+	ld a,(bc)
+	and (hl)
+	or d
+	ld (hl),a
+	dec hl
+
+	pop de
+	ld c,d
+	ld a,(bc)
+	ld d,a
+	ld c,e
+	ld a,(bc)
+	and (hl)
+	or d
+	ld (hl),a
+	ld de,24+1
+	add hl,de
+
+	pop de
+	ld c,d
+	ld a,(bc)
+	ld d,a
+	ld c,e
+	ld a,(bc)
+	and (hl)
+	or d
+	ld (hl),a
+	dec hl
+
+	pop de
+	ld c,d
+	ld a,(bc)
+	ld d,a
+	ld c,e
+	ld a,(bc)
+	and (hl)
+	or d
+	ld (hl),a
+	ld de,24+1
+	add hl,de
+
+	pop de
+	ld c,d
+	ld a,(bc)
+	ld d,a
+	ld c,e
+	ld a,(bc)
+	and (hl)
+	or d
+	ld (hl),a
+	dec hl
+
+	pop de
+	ld c,d
+	ld a,(bc)
+	ld d,a
+	ld c,e
+	ld a,(bc)
+	and (hl)
+	or d
+	ld (hl),a
+	ld de,24+1
+	add hl,de
+
+	pop de
+	ld c,d
+	ld a,(bc)
+	ld d,a
+	ld c,e
+	ld a,(bc)
+	and (hl)
+	or d
+	ld (hl),a
+	dec hl
+
+	pop de
+	ld c,d
+	ld a,(bc)
+	ld d,a
+	ld c,e
+	ld a,(bc)
+	and (hl)
+	or d
+	ld (hl),a
+	ld de,24+1
+	add hl,de
+
+	pop de
+	ld c,d
+	ld a,(bc)
+	ld d,a
+	ld c,e
+	ld a,(bc)
+	and (hl)
+	or d
+	ld (hl),a
+	dec hl
+
+	pop de
+	ld c,d
+	ld a,(bc)
+	ld d,a
+	ld c,e
+	ld a,(bc)
+	and (hl)
+	or d
+	ld (hl),a
+	ld de,24+1
+	add hl,de
+
+	pop de
+	ld c,d
+	ld a,(bc)
+	ld d,a
+	ld c,e
+	ld a,(bc)
+	and (hl)
+	or d
+	ld (hl),a
+	dec hl
+
+	pop de
+	ld c,d
+	ld a,(bc)
+	ld d,a
+	ld c,e
+	ld a,(bc)
+	and (hl)
+	or d
+	ld (hl),a
+	ld de,24+1
+	add hl,de
+
+	pop de
+	ld c,d
+	ld a,(bc)
+	ld d,a
+	ld c,e
+	ld a,(bc)
+	and (hl)
+	or d
+	ld (hl),a
+	dec hl
+
+	pop de
+	ld c,d
+	ld a,(bc)
+	ld d,a
+	ld c,e
+	ld a,(bc)
+	and (hl)
+	or d
+	ld (hl),a
+	ld de,24+1
+	add hl,de
+
+	pop de
+	ld c,d
+	ld a,(bc)
+	ld d,a
+	ld c,e
+	ld a,(bc)
+	and (hl)
+	or d
+	ld (hl),a
+	dec hl
+
+	pop de
+	ld c,d
+	ld a,(bc)
+	ld d,a
+	ld c,e
+	ld a,(bc)
+	and (hl)
+	or d
+	ld (hl),a
+	ld de,24+1
+	add hl,de
+
+	pop de
+	ld c,d
+	ld a,(bc)
+	ld d,a
+	ld c,e
+	ld a,(bc)
+	and (hl)
+	or d
+	ld (hl),a
+	dec hl
+
+	pop de
+	ld c,d
+	ld a,(bc)
+	ld d,a
+	ld c,e
+	ld a,(bc)
+	and (hl)
+	or d
+	ld (hl),a
+	ld de,24+1
+	add hl,de
+
+	pop de
+	ld c,d
+	ld a,(bc)
+	ld d,a
+	ld c,e
+	ld a,(bc)
+	and (hl)
+	or d
+	ld (hl),a
+	dec hl
+
+	pop de
+	ld c,d
+	ld a,(bc)
+	ld d,a
+	ld c,e
+	ld a,(bc)
+	and (hl)
+	or d
+	ld (hl),a
+	ld de,24+1
+	add hl,de
+
+	pop de
+	ld c,d
+	ld a,(bc)
+	ld d,a
+	ld c,e
+	ld a,(bc)
+	and (hl)
+	or d
+	ld (hl),a
+	dec hl
+
+	pop de
+	ld c,d
+	ld a,(bc)
+	ld d,a
+	ld c,e
+	ld a,(bc)
+	and (hl)
+	or d
+	ld (hl),a
+
+SetSP6:
+	ld sp,0
+	ei
+  RET
 
 ; Copy shadow screen to ZX screen
 ;
@@ -438,43 +908,168 @@ LA0F1:
 ; Display 96 tiles on the screen with Tileset1
 ;   HL Address where the 96 tiles are placed
 LA88F:
-  LD DE,$0000
+	ex de,hl
+	ld hl,ShadowScreen
+	ld (SetShadScrAdr1+1),hl
+	ex de,hl
+;  LD DE,$0000
+	ld d,8
+LA892_:
+	ld e,12
 LA892:
   PUSH HL
   PUSH DE
   LD L,(HL)               ; get tile number
-  LD A,L
-  OR A                    ; empty tile?
+  xor a
+  OR l                    ; empty tile?
   jp Z,LA8B0              ; yes => skip it
   CP $47                  ; menu background tile?
-  CALL Z,LBC29            ; yes => add phase to L
-  LD H,$00
-  ADD HL,HL               ;
-  ADD HL,HL               ;
-  ADD HL,HL               ;
-  ADD HL,HL               ; now HL = HL * 16
-  add hl,hl               ; now HL = HL * 32
-  LD BC,Tileset1
-  ADD HL,BC
-;  PUSH HL
-;  POP IX
-;  LD A,E
-  LD a,D
-  CALL L9EAD              ; Put background tile HL on the screen; A = row, E = tile column
+	jp nz,SkipMenuPhase
+; Add menu background phase 0..7 to L
+  LD A,(LDC55)            ; get Menu background phase
+  ADD A,L
+SkipMenuPhase:
+	rrca
+	rrca
+	rrca
+	ld l,a
+	and 00011111b
+	ld h,a
+	xor l
+	add a,Tileset1 & 255
+	ld l,a
+	ld a,Tileset1>>8
+	adc a,h
+	ld h,a
+
+; Put background tile on the screen, 16x16 -> 16x16 on shadow screen, no mask
+  ex de,hl              ; now DE = tile address
+	ld hl,0
+	add hl,sp
+	ld (SetSP2+1),hl
+  ex de,hl              ; now HL = tile address
+	di
+	ld sp,hl
+SetShadScrAdr1:
+	ld hl,0				; HL = shadow screen address
+
+  ld bc,24-1            ; increment to the next line
+	pop de
+	ld (hl),e
+	inc hl
+	ld (hl),d
+	add hl,bc
+
+	pop de
+	ld (hl),e
+	inc hl
+	ld (hl),d
+	add hl,bc
+
+	pop de
+	ld (hl),e
+	inc hl
+	ld (hl),d
+	add hl,bc
+
+	pop de
+	ld (hl),e
+	inc hl
+	ld (hl),d
+	add hl,bc
+
+	pop de
+	ld (hl),e
+	inc hl
+	ld (hl),d
+	add hl,bc
+
+	pop de
+	ld (hl),e
+	inc hl
+	ld (hl),d
+	add hl,bc
+
+	pop de
+	ld (hl),e
+	inc hl
+	ld (hl),d
+	add hl,bc
+
+	pop de
+	ld (hl),e
+	inc hl
+	ld (hl),d
+	add hl,bc
+
+	pop de
+	ld (hl),e
+	inc hl
+	ld (hl),d
+	add hl,bc
+
+	pop de
+	ld (hl),e
+	inc hl
+	ld (hl),d
+	add hl,bc
+
+	pop de
+	ld (hl),e
+	inc hl
+	ld (hl),d
+	add hl,bc
+
+	pop de
+	ld (hl),e
+	inc hl
+	ld (hl),d
+	add hl,bc
+
+	pop de
+	ld (hl),e
+	inc hl
+	ld (hl),d
+	add hl,bc
+
+	pop de
+	ld (hl),e
+	inc hl
+	ld (hl),d
+	add hl,bc
+
+	pop de
+	ld (hl),e
+	inc hl
+	ld (hl),d
+	add hl,bc
+
+	pop de
+	ld (hl),e
+	inc hl
+	ld (hl),d
+
+SetSP2:
+	ld sp,0
+	ei
 LA8B0:
   POP DE
+  ld hl,(SetShadScrAdr1+1)
+  inc hl
+  inc hl
+  ld (SetShadScrAdr1+1),hl
   POP HL
   INC HL
-  INC E                   ; next column
-  LD A,E
-  CP $0C                  ; was last column?
+	dec e
   jp NZ,LA892             ; no => continue loop by columns
-  LD E,$00
-  LD A,$10
-  ADD A,D                 ; next tile row
-  LD D,A
-  CP $80                  ; was last tile row?
-  jp NZ,LA892             ; no => continue loop by tile rows
+	push hl
+  ld hl,(SetShadScrAdr1+1)
+  ld bc,360
+  add hl,bc
+  ld (SetShadScrAdr1+1),hl
+	pop hl
+	dec d
+  jp NZ,LA892_             ; no => continue loop by tile rows
   RET
 ;
 LA8C6:
@@ -1231,7 +1826,8 @@ LAE19:
 ; Check access and show Door Lock
 ;   LDC8B - Access code slot number
 LAE23:
-  LD A,30       ; 40 -> 30 for Vector
+;  LD A,30       ; 40 -> 30 for Vector
+  LD A,24       ; 40 -> 24 for Vector
   LD (LDC59),A            ; set delay factor
   LD A,(LDC8B)            ; get Access code slot number
   LD D,$00
@@ -1585,7 +2181,8 @@ DoorLockGetEnteredFlagAddr:
 LB00E:
   XOR A
   LD (LDB82),A            ; mark we don't have an alien in the room
-  LD A,45       ; 64 -> 45 for Vector
+;  LD A,45       ; 64 -> 45 for Vector
+  LD A,45       ; 64 -> 38 for Vector
   LD (LDC59),A            ; set delay factor
   LD A,(LDC8A)            ; get Direction to other room
   CP $01                  ; down?
@@ -1847,7 +2444,8 @@ LB1BB:                    ; Inventory loop starts here
   call ClearInventoryMesage
   call DrawString         ; draw Inventory item description; was: CALL LBEDE;
   CALL LB295              ; draw Inventory selection square
-  ld a,50       ; 68 -> 50 for Vector
+;  ld a,50       ; 68 -> 50 for Vector
+  ld a,41       ; 68 -> 48 for Vector
   ld (LDC59),a            ; set delay factor
   call LB2D0              ; delay, to make Inventory selection more usable
 ; Inventory item selection loop
@@ -2069,7 +2667,8 @@ LB307:
   JP LB3E8                ; smth other
 ; Data cartridge reader (or data cartridge) selected in the Inventory
 LB33F:
-  LD A,50       ; 68 -> 50 for Vector
+;  LD A,50       ; 68 -> 50 for Vector
+  LD A,41       ; 68 -> 41 for Vector
   LD (LDC59),A            ; set delay factor
   LD (LDC85),A            ; Use delay and copy screen in LBEDE
   LD HL,LF42F             ; Encoded screen for Data cartridge reader
@@ -2937,7 +3536,8 @@ LB95C:
   XOR A
   LD (LDB7D),A            ; set look/shoot switch value = Look
 LB960:
-  LD A,100      ; 150 -> 100 for Vector
+;  LD A,100      ; 150 -> 100 for Vector
+  LD A,90      ; 150 -> 90 for Vector
   LD (LDC59),A            ; set delay factor
   CALL LB2D0              ; Delay
   JP L9E2E                ; Show the screen, continue the game main loop
@@ -3051,7 +3651,8 @@ LB9FF:
 ;
 ; Show titles and show Menu
 LBA07:
-  LD A,50       ; 68 -> 50 for Vector
+;  LD A,50       ; 68 -> 50 for Vector
+  LD A,41       ; 68 -> 41 for Vector
   LD (LDC59),A            ; set delay factor
   LD (LDC85),A            ; Use delay and copy screen in LBEDE
   LD HL,$3A1E
@@ -3214,7 +3815,8 @@ NewGame_5:                ; Clear 4 flags
   CALL LBC6B              ; Generate random code
   CALL LBC7D              ; Clear shadow screen and copy to ZX screen
   call ScreenThemeNite    ; switching to dark theme for story mode
-  LD A,50       ; 68 -> 50 for Vector
+;  LD A,50       ; 68 -> 50 for Vector
+  LD A,41       ; 68 -> 41 for Vector
   LD (LDC59),A            ; set delay factor
   LD (LDC85),A            ; Use delay and copy screen in LBEDE
   LD A,14
@@ -3328,13 +3930,7 @@ LBBEC:
   CALL ShowShadowScreen   ; Copy shadow screen to ZX screen
   CALL LADA1              ; Wait for Escape key
   JP LBA3D                ; Return to Menu
-;
-; Add menu background phase 0..7 to L
-LBC29:
-  LD A,(LDC55)            ; get Menu background phase
-  ADD A,L
-  LD L,A
-  RET
+
 ;
 ; Delay x40
 LBA81:
@@ -3530,7 +4126,8 @@ LBD70:
   JP LBCC5                ; Show the message/screen, wait for key, continue game main loop
 ; Flying away on the Pod
 LBD85:
-  LD A,50       ; 68 -> 50 for Vector
+;  LD A,50       ; 68 -> 50 for Vector
+  LD A,41       ; 68 -> 41 for Vector
   LD (LDC59),A            ; set delay factor
   LD (LDC85),A            ; Use delay and copy screen in LBEDE
   XOR A
@@ -3756,7 +4353,8 @@ Credits_5:
   LD A,(LDD57)
   INC A                   ; increase the Credits line counter
   LD (LDD57),A
-  CP $49
+;  CP $49
+  CP $49+2
   jp NZ,LBF6F_3
   call LBA81              ; Delay x40 - added to have a pause after the last line
 Credits_exit:

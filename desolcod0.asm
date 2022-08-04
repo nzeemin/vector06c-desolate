@@ -46,10 +46,9 @@ Start	.equ	280h
 	lxi	h,KEYINT
 	shld	38h+1
 
-; Move encoded block from Start to A000h
-	xra	a
+; Move encoded block from Start to C000h
 	lxi	d,Start		; source addr
-	lxi	b,0A000h	; destination addr
+	lxi	b,0C000h	; destination addr
 Init_1:
 	ldax	d
 	inx	d
@@ -59,14 +58,13 @@ Init_1:
 	inr	b
 	jnz	Init_1
 
-; Decompress the encoded block from A000h to Start
-	lxi	d,0A000h
+; Decompress the encoded block from C000h to Start
+	lxi	d,0C000h
 	lxi	b,Start
 	call	dzx0
 
-; Clear memory from A000h to FFFFh
-	xra	a
-	lxi	b,0A000h	; destination addr
+; Clear memory from C000h to FFFFh
+	lxi	b,0C000h	; destination addr
 Init_2:
 	stax	b
 	inr	c

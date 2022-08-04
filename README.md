@@ -3,7 +3,8 @@ Porting **Desolate** game from TI-83 Plus calculator to soviet computer [Vector-
 
 Thanks a lot to [zx-pk.ru forum](https://zx-pk.ru/forums/55-vektor.html) members for all the help and support!
 
-Porting status: released.
+Porting status: released, in February 2021.<br>
+Also, [ivagor](https://github.com/ivagorRetrocomp) made some post-release optimizations in July 2022.
 
 ![](screenshot/port-room1.png) ![](screenshot/port-inventory.png) ![](screenshot/port-doorlock.png)
 
@@ -44,8 +45,8 @@ To run the game on Wabbitemu emulator:
  - `tasm.exe` compatible with Windows 10 + `TASM85.TAB`
    http://old-dos.ru/dl.php?id=1926
 
- - `zx0.exe`
-   https://github.com/einar-saukas/ZX0/blob/main/win/zx0.exe
+ - `salvador.exe` ZX0 compressor
+   https://github.com/emmanuel-marty/salvador/releases
 
 
 ## Links
